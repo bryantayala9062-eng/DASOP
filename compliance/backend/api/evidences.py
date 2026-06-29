@@ -8,6 +8,8 @@ import os
 import uuid
 import hashlib
 import logging
+import threading
+from core.backup import ejecutar_respaldo_compliance
 
 from core.database import get_db
 from core.dependencies import get_current_user
@@ -167,6 +169,10 @@ async def upload_evidence(
 
     db.commit()
     db.refresh(evidence)
+    
+    # Trigger backup
+    threading.Thread(target=ejecutar_respaldo_compliance, daemon=True).start()
+    
     logger.info(f"[AUDIT] Upload: {file.filename} por {current_user.full_name}")
     return evidence_to_dict(evidence)
 
@@ -238,6 +244,10 @@ def delete_evidence(
         os.remove(evidence.file_path)
     db.delete(evidence)
     db.commit()
+    
+    # Trigger backup
+    threading.Thread(target=ejecutar_respaldo_compliance, daemon=True).start()
+    
     logger.info(f"[AUDIT] Delete: {evidence.file_name} por {current_user.full_name}")
 
 

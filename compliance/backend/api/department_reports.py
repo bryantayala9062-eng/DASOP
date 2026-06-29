@@ -5,6 +5,8 @@ from typing import Optional
 import os
 import shutil
 import logging
+import threading
+from core.backup import ejecutar_respaldo_compliance
 
 from core.database import get_db
 from core.dependencies import get_current_user
@@ -134,6 +136,9 @@ def upload_report(
     )
     db.add(audit)
     db.commit()
+    
+    # Trigger backup
+    threading.Thread(target=ejecutar_respaldo_compliance, daemon=True).start()
     
     logger.info(f"[AUDIT] Report upload: {file.filename} por {current_user.full_name} ({department} {period_month}/{period_year})")
     return {"message": "Reporte subido exitosamente", "report_id": report.id}
