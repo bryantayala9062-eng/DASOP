@@ -288,13 +288,16 @@ window.openPeriodDetails = function(dept, month) {
 
 async function downloadFile(url, fileName) {
   try {
+    toast('Descargando archivo...', 'success');
     const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) throw new Error();
     const blob = await res.blob();
     const a = document.createElement('a');
     a.href = window.URL.createObjectURL(blob);
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(a.href);
   } catch (e) { toast('No se pudo descargar', 'error'); }
 }
