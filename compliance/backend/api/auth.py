@@ -187,15 +187,7 @@ MODULES_CONFIG = [
         "adminOnly": False,
         "deptKey": "RH",
     },
-    {
-        "id": "facturacion",
-        "name": "Facturación",
-        "description": "Gestión de facturas, cotizaciones y contratos",
-        "icon": "🧾",
-        "color": "#f97316",
-        "adminOnly": True,   # por ahora solo admin
-        "deptKey": "Facturación",
-    },
+
 ]
 
 

@@ -519,7 +519,7 @@ function closeModal(id) { const el = document.getElementById(id); if (el) el.cla
 function roleLabel(r) { return { admin:'Administrador', manager:'Gerente', user:'Usuario' }[r] || r; }
 function hexToRgba(hex, a) { const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
 function deptForModule(modId) {
-  return { legal:'Legal', admin:'Administración', tesoreria:'Tesorería', contabilidad:'Contabilidad', operaciones:'Operaciones', rh:'RH', facturacion:'Facturación' }[modId] || null;
+  return { legal:'Legal', admin:'Administración', tesoreria:'Tesorería', contabilidad:'Contabilidad', operaciones:'Operaciones', rh:'RH' }[modId] || null;
 }
 function toast(msg, type = 'success') {
   const el = document.createElement('div');
