@@ -604,12 +604,7 @@ async function submitProfile() {
     }
   } catch (e) { toast('Error de red', 'error'); }
 }
-      toast(d.detail || 'Error al crear usuario', 'error');
-    }
-  } catch (e) {
-    toast('Error de red', 'error');
-  }
-}
+
 
 // ── UTILS ────────────────────────────────────────────────
 function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
