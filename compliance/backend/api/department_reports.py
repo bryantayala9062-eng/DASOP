@@ -276,25 +276,34 @@ def get_period_status(
 
             is_future = m > current_month
 
+            r_info = report_map.get(key)
+            e_info = eval_map.get(key)
+            
             completeness = 0
-            if has_report:
-                completeness += 1
-            if has_eval:
-                completeness += 1
-            # if has_checklist:
-            #     completeness += 1
+            if r_info: completeness += 1
+            if e_info: completeness += 1
+
+            if is_future:
+                cell_status = "future"
+            elif completeness == 0:
+                cell_status = "missing"
+            else:
+                # Si hay reporte pero no está revisado
+                report_status = r_info.get("status") if r_info else "pending"
+                if completeness == 2 and report_status == "reviewed":
+                    cell_status = "reviewed"
+                else:
+                    cell_status = "submitted"
 
             dept_row["months"].append({
                 "month": m,
                 "monthName": MONTH_NAMES[m],
                 "isFuture": is_future,
-                "report": report_map.get(key),
-                "kpiEval": eval_map.get(key),
+                "report": r_info,
+                "kpiEval": e_info,
                 "checklist": checklist_map.get(key),
-                "completeness": completeness,  # 0-3
-                "status": "complete" if completeness == 2
-                         else "partial" if completeness > 0
-                         else ("future" if is_future else "missing")
+                "completeness": completeness,
+                "status": cell_status
             })
 
         matrix.append(dept_row)

@@ -253,8 +253,8 @@ async function renderDashboard() {
             <td style="font-weight:600">${row.department}</td>
             ${row.months.map(m => {
               if (m.isFuture) return '<td style="text-align:center;color:var(--text3)">—</td>';
-              const color = m.status === 'complete' ? 'green' : m.status === 'partial' ? 'orange' : 'red';
-              const label = m.status === 'complete' ? 'Completo' : m.status === 'partial' ? 'Parcial' : 'Pendiente';
+              const color = m.status === 'reviewed' ? 'green' : m.status === 'submitted' ? 'orange' : 'red';
+              const label = m.status === 'reviewed' ? 'Revisado' : m.status === 'submitted' ? 'Entregado' : 'Falta';
               return `<td style="text-align:center"><span class="badge badge-${color}" style="padding:2px 6px;font-size:0.7rem;cursor:pointer" onclick="openPeriodDetails('${row.department}',${m.month})">${label}</span></td>`;
             }).join('')}
           </tr>`).join('')}
@@ -327,9 +327,29 @@ async function loadReports() {
     <td>${r.periodMonth}/${r.periodYear}</td>
     <td>${r.uploaderName}</td>
     <td>${r.uploadDate ? new Date(r.uploadDate).toLocaleDateString('es-MX') : '—'}</td>
-    <td><span class="badge badge-${r.status === 'reviewed' ? 'green' : 'orange'}">${r.status === 'reviewed' ? 'Revisado' : 'Pendiente'}</span></td>
-    <td>${r.evidences?.length ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem" onclick="downloadFile('${API}/api/evidences/${r.evidences[0].id}/download','${r.evidences[0].fileName}')">📥</button>` : '—'}</td>
+    <td><span class="badge badge-${r.status === 'reviewed' ? 'green' : 'orange'}">${r.status === 'reviewed' ? 'Revisado' : 'Entregado'}</span></td>
+    <td>
+      ${r.evidences?.length ? `<button class="btn-ghost" title="Descargar" style="padding:4px 8px;font-size:0.8rem" onclick="downloadFile('${API}/api/evidences/${r.evidences[0].id}/download','${r.evidences[0].fileName}')">📥</button>` : '—'}
+      ${(currentUser.role === 'admin' && r.status !== 'reviewed') ? `<button class="btn-ghost" title="Aprobar Reporte" style="padding:4px 8px;font-size:0.8rem;margin-left:4px" onclick="reviewReport(${r.id})">✅</button>` : ''}
+    </td>
   </tr>`).join('');
+}
+
+async function reviewReport(id) {
+  try {
+    const res = await fetch(`${API}/api/department-reports/${id}/review`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      toast('Reporte marcado como Revisado', 'success');
+      loadReports();
+    } else {
+      toast('Error al aprobar reporte', 'error');
+    }
+  } catch (e) {
+    toast('Error de red', 'error');
+  }
 }
 
 function openReportModal() {
