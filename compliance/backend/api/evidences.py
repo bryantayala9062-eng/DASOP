@@ -262,7 +262,7 @@ def get_audit_log(
         "upload": "📤 Subida",
         "download": "📥 Descarga",
         "delete": "🗑️ Eliminación",
-        "integrity_check": "🔍 Verificación"
+        "integrity_check": "🔍 Auditoría de integridad"
     }
 
     return {
