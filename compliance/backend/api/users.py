@@ -22,6 +22,9 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
     department: Optional[str] = None
     role: Optional[str] = None
     status: Optional[str] = None
@@ -75,7 +78,48 @@ def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db), c
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    for field, value in data.dict(exclude_unset=True).items():
+        
+    update_data = data.dict(exclude_unset=True)
+    if "password" in update_data and update_data["password"]:
+        update_data["password_hash"] = get_password_hash(update_data.pop("password"))
+    elif "password" in update_data:
+        del update_data["password"]
+        
+    for field, value in update_data.items():
         setattr(user, field, value)
     db.commit()
     return user_to_dict(user)
+
+@router.delete("/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="No puedes eliminar tu propia cuenta de esta forma")
+        
+    user.status = "inactive"
+    db.commit()
+    return {"message": "Usuario desactivado correctamente"}
+
+@router.put("/profile/me")
+def update_my_profile(data: UserUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    update_data = data.dict(exclude_unset=True)
+    
+    # Prevenir que cambie su propio rol o departamento
+    if "role" in update_data:
+        del update_data["role"]
+    if "department" in update_data:
+        del update_data["department"]
+    if "status" in update_data:
+        del update_data["status"]
+        
+    if "password" in update_data and update_data["password"]:
+        update_data["password_hash"] = get_password_hash(update_data.pop("password"))
+    elif "password" in update_data:
+        del update_data["password"]
+        
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+    db.commit()
+    return user_to_dict(current_user)

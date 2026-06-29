@@ -469,7 +469,7 @@ async function renderUsers() {
 
   pc.innerHTML = headerHtml + (users.length === 0 ? '<div class="empty-state">No hay usuarios.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
-      <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Departamento</th><th>Estado</th></tr></thead>
+      <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Acción</th></tr></thead>
       <tbody>${users.map(u => `<tr>
         <td style="font-weight:500"><div style="display:flex;align-items:center;gap:8px">
           <div class="avatar" style="width:28px;height:28px;font-size:0.7rem">${u.initials || 'U'}</div>${u.fullName}
@@ -478,20 +478,56 @@ async function renderUsers() {
         <td style="text-transform:capitalize">${roleLabel(u.role)}</td>
         <td>${u.department || '—'}</td>
         <td><span class="badge badge-${u.status === 'active' ? 'green' : 'red'}">${u.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
+        <td>
+          <button class="btn-ghost" style="padding:4px" onclick='editUser(${JSON.stringify(u)})' title="Editar">✏️</button>
+          <button class="btn-ghost" style="padding:4px;color:var(--red)" onclick="deleteUser(${u.id})" title="Eliminar/Desactivar">🗑️</button>
+        </td>
       </tr>`).join('')}</tbody>
     </table></div>
   `);
 }
 
+let editingUserId = null;
+
 function openUserModal() {
+  editingUserId = null;
+  document.querySelector('#modal-user .modal-header h3').textContent = 'Crear Usuario';
+  document.querySelector('#modal-user .btn-primary').textContent = 'Crear Usuario';
   document.getElementById('u-name').value = '';
   document.getElementById('u-username').value = '';
   document.getElementById('u-email').value = '';
   document.getElementById('u-pass').value = '';
+  document.getElementById('u-pass').placeholder = 'Mínimo 6 caracteres';
   document.getElementById('u-role').value = 'user';
   document.getElementById('u-dept').value = '';
   openModal('modal-user');
 }
+
+function editUser(u) {
+  editingUserId = u.id;
+  document.querySelector('#modal-user .modal-header h3').textContent = 'Editar Usuario';
+  document.querySelector('#modal-user .btn-primary').textContent = 'Guardar Cambios';
+  document.getElementById('u-name').value = u.fullName || '';
+  document.getElementById('u-username').value = u.username || u.email || ''; // fallback for old records
+  document.getElementById('u-email').value = u.email || '';
+  document.getElementById('u-pass').value = '';
+  document.getElementById('u-pass').placeholder = 'Dejar en blanco para no cambiar';
+  document.getElementById('u-role').value = u.role || 'user';
+  document.getElementById('u-dept').value = u.department || '';
+  openModal('modal-user');
+}
+
+async function deleteUser(id) {
+  if (!confirm('¿Estás seguro de que deseas desactivar este usuario?')) return;
+  try {
+    const res = await fetch(`${API}/api/users/${id}`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) { toast('Usuario desactivado', 'success'); renderUsers(); }
+    else { const d = await res.json(); toast(d.detail || 'Error', 'error'); }
+  } catch (e) { toast('Error de red', 'error'); }
+}
+
 
 async function submitUser() {
   const full_name = document.getElementById('u-name').value.trim();
@@ -501,23 +537,73 @@ async function submitUser() {
   const role = document.getElementById('u-role').value;
   const department = document.getElementById('u-dept').value;
 
-  if (!full_name || !username || !password) return toast('Completa los campos obligatorios', 'error');
-  if (password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
+  if (!full_name || !username) return toast('Completa nombre y usuario', 'error');
+  if (!editingUserId && !password) return toast('La contraseña es obligatoria', 'error');
+  if (password && password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
 
-  const payload = { full_name, username, email: email || null, password, role, department: department || null };
+  const payload = { full_name, username, email: email || null, role, department: department || null };
+  if (password) payload.password = password;
 
   try {
-    const res = await fetch(`${API}/api/users`, {
-      method: 'POST',
+    const url = editingUserId ? `${API}/api/users/${editingUserId}` : `${API}/api/users`;
+    const method = editingUserId ? 'PUT' : 'POST';
+    
+    const res = await fetch(url, {
+      method,
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     if (res.ok) {
-      toast('Usuario creado exitosamente', 'success');
+      toast(editingUserId ? 'Usuario actualizado' : 'Usuario creado exitosamente', 'success');
       closeModal('modal-user');
       renderUsers();
     } else {
       const d = await res.json();
+      toast(d.detail || 'Error en la petición', 'error');
+    }
+  } catch (e) { toast('Error de red', 'error'); }
+}
+
+// ── MY PROFILE ───────────────────────────────────────────
+function openProfileModal() {
+  document.getElementById('p-name').value = currentUser.fullName || '';
+  document.getElementById('p-username').value = currentUser.username || currentUser.email || '';
+  document.getElementById('p-email').value = currentUser.email || '';
+  document.getElementById('p-pass').value = '';
+  openModal('modal-profile');
+}
+
+async function submitProfile() {
+  const full_name = document.getElementById('p-name').value.trim();
+  const username = document.getElementById('p-username').value.trim();
+  const email = document.getElementById('p-email').value.trim();
+  const password = document.getElementById('p-pass').value.trim();
+
+  if (!full_name || !username) return toast('El nombre y usuario son obligatorios', 'error');
+  if (password && password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
+
+  const payload = { full_name, username, email: email || null };
+  if (password) payload.password = password;
+
+  try {
+    const res = await fetch(`${API}/api/users/profile/me`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      toast('Perfil actualizado. Reinicia sesión si cambiaste la contraseña.', 'success');
+      closeModal('modal-profile');
+      const data = await res.json();
+      currentUser = data; // update local context
+      sessionStorage.setItem('user', JSON.stringify(currentUser));
+      document.getElementById('user-name').textContent = currentUser.fullName;
+    } else {
+      const d = await res.json();
+      toast(d.detail || 'Error', 'error');
+    }
+  } catch (e) { toast('Error de red', 'error'); }
+}
       toast(d.detail || 'Error al crear usuario', 'error');
     }
   } catch (e) {

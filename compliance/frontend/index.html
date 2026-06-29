@@ -89,7 +89,7 @@
 
     <div class="sidebar-user">
       <div class="avatar" id="user-avatar">B</div>
-      <div class="sidebar-user-info">
+      <div class="sidebar-user-info" onclick="openProfileModal()" style="cursor:pointer" title="Mi Perfil">
         <div class="name" id="user-name">Bryant</div>
         <div class="role" id="user-role">admin</div>
       </div>
@@ -289,6 +289,42 @@
   </div>
 </div>
 
-<script src="compliance_app.js?v=10"></script>
+<!-- MODAL MI PERFIL -->
+<div class="modal-overlay" id="modal-profile" onclick="if(event.target===this) closeModal('modal-profile')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Mi Perfil</h3>
+      <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input class="form-control" id="p-name" type="text">
+        </div>
+        <div class="form-group">
+          <label>Usuario (Login)</label>
+          <input class="form-control" id="p-username" type="text">
+        </div>
+      </div>
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nueva Contraseña</label>
+          <input class="form-control" id="p-pass" type="password" placeholder="Dejar en blanco para no cambiar">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input class="form-control" id="p-email" type="email">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-profile')">Cancelar</button>
+      <button class="btn-primary" style="width:auto" onclick="submitProfile()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="compliance_app.js?v=11"></script>
 </body>
 </html>
