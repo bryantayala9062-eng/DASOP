@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario de Implementación - DashOP Compliance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.5);
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    /* Línea central */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--accent), #a78bfa, var(--success));
+      border-radius: 4px;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .phase {
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .phase-title {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 30px;
+    }
+
+    .phase-title span {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 10px 25px;
+      border-radius: 30px;
+      border: 1px solid var(--accent);
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .day-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 25px;
+      transition: all 0.3s ease;
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s forwards;
+    }
+
+    .day-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .day-number {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .day-desc {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    /* Alinear alternadamente */
+    .day-card:nth-child(odd) {
+      grid-column: 1;
+      text-align: right;
+    }
+    
+    .day-card:nth-child(even) {
+      grid-column: 2;
+      text-align: left;
+    }
+
+    /* Puntos en la línea central */
+    .day-card::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      background: var(--bg-color);
+      border: 4px solid var(--accent);
+      border-radius: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .day-card:nth-child(odd)::after {
+      right: -24px;
+    }
+
+    .day-card:nth-child(even)::after {
+      left: -24px;
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsivo para móviles */
+    @media (max-width: 768px) {
+      .timeline::before {
+        left: 20px;
+      }
+      .days-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .day-card {
+        margin-left: 40px;
+      }
+      .day-card:nth-child(odd), 
+      .day-card:nth-child(even) {
+        grid-column: 1;
+        text-align: left;
+      }
+      .day-card:nth-child(odd)::after, 
+      .day-card:nth-child(even)::after {
+        left: -28px;
+        right: auto;
+      }
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid var(--card-border);
+      color: var(--success);
+      font-weight: 600;
+      font-size: 1.2rem;
+      animation: fadeInUp 0.6s forwards;
+      animation-delay: 1.5s;
+      opacity: 0;
+    }
+
+    /* Reglas para imprimir en PDF manteniendo el diseño oscuro */
+    @media print {
+      html, body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        height: auto !important;
+      }
+      .day-card, .phase-title span, .timeline::before, .day-card::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .phase, .day-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      /* Forzar que no haya animaciones en la impresión y todo sea visible */
+      .day-card, .header, .footer {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+      }
+      @page {
+        margin: 1cm;
+        background: #0f172a;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Cronograma de Implementación</h1>
+      <p>Calendario de entrega DashOp-Compliance</p>
+      <p style="margin-top:10px; font-weight:600; color:#cbd5e1;">Tiempo estimado de entrega: 15 Días Hábiles</p>
+    </div>
+
+    <div class="timeline">
+      
+      <!-- FASE 1 -->
+      <div class="phase">
+        <div class="phase-title"><span>Fase 1: Configuración Base y Lógica de Negocio</span></div>
+        <div class="days-grid">
+          <div class="day-card" style="animation-delay: 0.1s;">
+            <span class="day-number">Día 1 (9 de Jun)</span>
+            <div class="day-desc">Levantamiento de información y estructuración digital de los departamentos.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.2s;">
+            <span class="day-number">Día 2 (10 de Jun)</span>
+            <div class="day-desc">Definición de parámetros para el motor de captura de KPIs.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.3s;">
+            <span class="day-number">Día 3 (11 de Jun)</span>
+            <div class="day-desc">Construcción de la lógica de evaluación y cálculo de puntuación global (100%).</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.4s;">
+            <span class="day-number">Día 4 (12 de Jun)</span>
+            <div class="day-desc">Diseño de la interfaz ejecutiva para el ingreso de resultados.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.5s;">
+            <span class="day-number">Día 5 (15 de Jun)</span>
+            <div class="day-desc">Integración del panel de indicadores con el sistema principal.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 2 -->
+      <div class="phase">
+        <div class="phase-title"><span style="border-color: #a78bfa; box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);">Fase 2: Gestión de Evidencias Documentales</span></div>
+        <div class="days-grid">
+          <div class="day-card" style="animation-delay: 0.6s;">
+            <span class="day-number" style="color: #a78bfa;">Día 6 (16 de Jun)</span>
+            <div class="day-desc">Diseño de la estructura de almacenamiento seguro de archivos en la nube local.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.7s;">
+            <span class="day-number" style="color: #a78bfa;">Día 7 (17 de Jun)</span>
+            <div class="day-desc">Habilitación de plataforma para carga optimizada de formatos operativos (Excel, PDF, Word).</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.8s;">
+            <span class="day-number" style="color: #a78bfa;">Día 8 (18 de Jun)</span>
+            <div class="day-desc">Construcción de la interfaz interactiva para el buzón de "Reportes de Área".</div>
+          </div>
+          <div class="day-card" style="animation-delay: 0.9s;">
+            <span class="day-number" style="color: #a78bfa;">Día 9 (19 de Jun)</span>
+            <div class="day-desc">Sistema de vinculación automática de reportes físicos con el periodo mensual evaluado.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 1.0s;">
+            <span class="day-number" style="color: #a78bfa;">Día 10 (22 de Jun)</span>
+            <div class="day-desc">Pruebas de trazabilidad e integridad de descarga de los documentos.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 3 -->
+      <div class="phase">
+        <div class="phase-title"><span style="border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);">Fase 3: Seguridad, Auditoría y Entrega</span></div>
+        <div class="days-grid">
+          <div class="day-card" style="animation-delay: 1.1s;">
+            <span class="day-number" style="color: var(--success);">Día 11 (23 de Jun)</span>
+            <div class="day-desc">Blindaje de seguridad y privacidad: Restricción de visibilidad por departamento.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 1.2s;">
+            <span class="day-number" style="color: var(--success);">Día 12 (24 de Jun)</span>
+            <div class="day-desc">Pruebas de estrés del sistema y eliminación controlada de datos de ensayo.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 1.3s;">
+            <span class="day-number" style="color: var(--success);">Día 13 (25 de Jun)</span>
+            <div class="day-desc">Revisiones de usabilidad (UX) y calidad visual corporativa de la plataforma.</div>
+          </div>
+          <div class="day-card" style="animation-delay: 1.4s;">
+            <span class="day-number" style="color: var(--success);">Día 14 (26 de Jun)</span>
+            <div class="day-desc">Validacion, ajustes visuales y de funcionalidad</div>
+          </div>
+          <div class="day-card" style="animation-delay: 1.5s;">
+            <span class="day-number" style="color: var(--success);">Día 15 (29 de Jun)</span>
+            <div class="day-desc">Entrega de usuarios a gerentes de area</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      Día 15 (29 de Junio): Proyecto operativo
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Backend ignores
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+ENV/
+env/
+
+# Database files
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+
+# Frontend ignores
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Local databases (excel/csv used for storage in this project)
+*.xlsx
+*.csv
+!template*.xlsx
+
+# Cache de datos generada en runtime
+*.pkl
+backend/api/dashboard/.cache_data/
+
+# Ejecutable de Cloudflare (binario pesado ~65MB)
+cloudflared-windows-amd64.exe

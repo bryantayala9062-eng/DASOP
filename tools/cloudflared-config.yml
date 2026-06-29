@@ -1,0 +1,14 @@
+# Configuración del Tunnel Cloudflare para Portal ERP
+# Tunnel: dashop
+# ID: ead6906b-5857-4a7e-8a9f-65d6cf38465b
+
+tunnel: ead6906b-5857-4a7e-8a9f-65d6cf38465b
+credentials-file: C:\Users\datao\.cloudflared\ead6906b-5857-4a7e-8a9f-65d6cf38465b.json
+
+# Rutas de tráfico:
+# Todo el tráfico de www.dashop.com va al frontend (puerto 5190)
+# El frontend internamente proxy-ea las llamadas /api al backend (puerto 8010)
+ingress:
+  - hostname: www.dashop.com
+    service: http://localhost:5190
+  - service: http_status:404

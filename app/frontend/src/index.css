@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@theme {
+  --color-slate-50: #faf9f8;
+  --color-slate-100: #f2efeb;
+  --color-slate-200: #e4ded6;
+  --color-slate-300: #D3CABF; /* Light G */
+  --color-slate-400: #b5b0b1;
+  --color-slate-500: #969192;
+  --color-slate-600: #787475;
+  --color-slate-700: #5a5758;
+  --color-slate-800: #424041;
+  --color-slate-900: #333132; /* Brand Grey */
+  --color-slate-950: #1f1e1f;
+}
+
+@layer base {
+  :root {
+    font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: var(--color-slate-900);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Safe-area para iPhone con notch/Dynamic Island */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--color-slate-900);
+  }
+
+  body {
+    display: flex;
+    min-width: 320px;
+    /* Evitar overscroll "bounce" en iOS */
+    overscroll-behavior: none;
+    /* Mejorar tap en móvil */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  #root {
+    display: flex;
+    flex: 1;
+  }
+
+  /* Reset Vite default button styles */
+  button {
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 0;
+    /* Mejorar área táctil en móvil */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Inputs más fáciles de tocar en móvil */
+  input, select, textarea {
+    font-size: 16px; /* Evitar zoom automático en iOS al hacer focus */
+  }
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: var(--color-slate-800); }
+::-webkit-scrollbar-thumb { background: var(--color-slate-700); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-slate-600); }
+
+/* Ocultar scrollbar en mobile manteniéndola funcional */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: rgba(148, 145, 146, 0.35);
+  color: white;
+}
+
+/* ── Custom scrollbar class (para modales con scroll) ── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-slate-700); border-radius: 2px; }
+
+/* ── Mobile nav overlay ── */
+.mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Safe area padding helpers ── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+
+/* ── Tab bar scroll en mobile ── */
+.tabs-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Tabla responsive: scroll con sombra indicadora ── */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to left, var(--color-slate-900) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ── Animación de entrada del sidebar en mobile ── */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+.sidebar-mobile-open {
+  animation: slideInLeft 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
