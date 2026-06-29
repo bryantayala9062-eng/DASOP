@@ -144,7 +144,10 @@ function exitModule() {
 // ── SIDEBAR ──────────────────────────────────────────────
 function buildSidebar() {
   const nav = document.getElementById('sidebar-nav');
-  nav.innerHTML = REPORTING_NAV.map((group, gi) => {
+  nav.innerHTML = REPORTING_NAV.filter(group => {
+    if (group.section === 'Admin' && currentUser.role !== 'admin') return false;
+    return true;
+  }).map((group, gi) => {
     const sid = `sec-${gi}`;
     return `
       <div class="nav-section" onclick="toggleSection('${sid}')">
