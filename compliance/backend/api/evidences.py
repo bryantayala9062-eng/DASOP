@@ -272,6 +272,7 @@ def get_audit_log(
             "action": log.action,
             "actionLabel": action_labels.get(log.action, log.action),
             "userName": log.user.full_name if log.user else "Sistema",
+            "userDepartment": log.user.department if log.user else "—",
             "userId": log.user_id,
             "fileName": log.file_name,
             "fileSize": log.file_size,

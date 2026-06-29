@@ -590,10 +590,11 @@ async function renderAudit() {
 
   pc.innerHTML = headerHtml + (data.logs.length === 0 ? '<div class="empty-state">No hay registros de auditoría.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
-      <thead><tr><th>Fecha / Hora</th><th>Usuario</th><th>Acción</th><th>Archivo</th><th>Tamaño</th></tr></thead>
+      <thead><tr><th>Fecha / Hora</th><th>Usuario</th><th>Área</th><th>Acción</th><th>Archivo</th><th>Tamaño</th></tr></thead>
       <tbody>${data.logs.map(log => `<tr>
-        <td style="color:var(--text2); font-size:0.9rem">${new Date(log.date || log.created_at || Date.now()).toLocaleString('es-MX')}</td>
+        <td style="color:var(--text2); font-size:0.9rem">${new Date(log.date || log.createdAt || log.created_at || Date.now()).toLocaleString('es-MX')}</td>
         <td style="font-weight:500">${log.userName}</td>
+        <td><span class="badge badge-gray">${log.userDepartment || '—'}</span></td>
         <td>${log.actionLabel}</td>
         <td style="word-break:break-all">${log.fileName || '—'}</td>
         <td style="color:var(--text2)">${log.fileSizeLabel || '—'}</td>
