@@ -17,6 +17,7 @@ const REPORTING_NAV = [
   ]},
   { section: 'Admin', open: false, items: [
     { id: 'users', icon: '👥', label: 'Usuarios' },
+    { id: 'audit', icon: '🔍', label: 'Trazabilidad' },
   ]},
 ];
 
@@ -195,6 +196,7 @@ function showPage(page) {
     reports:   ['Reportes de Área', 'Directorio de reportes mensuales'],
     kpis:      ['Evaluación de KPIs', 'Resultados operativos del mes'],
     users:     ['Usuarios', 'Gestión de cuentas y accesos'],
+    audit:     ['Trazabilidad', 'Historial de auditoría y acciones en el sistema'],
   };
   const [title, sub] = titles[page] || [page, ''];
   document.getElementById('page-title').textContent = title;
@@ -216,6 +218,10 @@ function showPage(page) {
     pc.style.display = 'block';
     pc.innerHTML = '<div class="loading-state"><span class="spinner"></span> Cargando...</div>';
     renderUsers();
+  } else if (page === 'audit') {
+    pc.style.display = 'block';
+    pc.innerHTML = '<div class="loading-state"><span class="spinner"></span> Cargando...</div>';
+    renderAudit();
   } else {
     pc.style.display = 'block';
     pc.innerHTML = '<div class="empty-state">Página no encontrada</div>';
@@ -562,6 +568,38 @@ async function submitUser() {
       toast(d.detail || 'Error en la petición', 'error');
     }
   } catch (e) { toast('Error de red', 'error'); }
+}
+
+// ── AUDIT / TRAZABILIDAD ──────────────────────────────────
+async function renderAudit() {
+  const pc = document.getElementById('page-content');
+  if (currentUser.role !== 'admin') { pc.innerHTML = '<div class="empty-state">No tienes permisos.</div>'; return; }
+  
+  const data = await api('/api/evidences/audit/log?limit=200');
+  if (!data || !data.logs) {
+    pc.innerHTML = '<div class="empty-state">Error al cargar la trazabilidad.</div>';
+    return;
+  }
+  
+  const headerHtml = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h2><span class="icon">🔍</span> Registro Documental</h2>
+      <button class="btn-ghost" onclick="renderAudit()">🔄 Actualizar</button>
+    </div>
+  `;
+
+  pc.innerHTML = headerHtml + (data.logs.length === 0 ? '<div class="empty-state">No hay registros de auditoría.</div>' : `
+    <div class="data-table-wrapper"><table class="data-table">
+      <thead><tr><th>Fecha / Hora</th><th>Usuario</th><th>Acción</th><th>Archivo</th><th>Tamaño</th></tr></thead>
+      <tbody>${data.logs.map(log => `<tr>
+        <td style="color:var(--text2); font-size:0.9rem">${new Date(log.date || log.created_at || Date.now()).toLocaleString('es-MX')}</td>
+        <td style="font-weight:500">${log.userName}</td>
+        <td>${log.actionLabel}</td>
+        <td style="word-break:break-all">${log.fileName || '—'}</td>
+        <td style="color:var(--text2)">${log.fileSizeLabel || '—'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  `);
 }
 
 // ── MY PROFILE ───────────────────────────────────────────
