@@ -245,8 +245,8 @@
           <input class="form-control" id="u-name" type="text" placeholder="Ej: Juan Pérez">
         </div>
         <div class="form-group">
-          <label>Correo Electrónico *</label>
-          <input class="form-control" id="u-email" type="email" placeholder="juan@empresa.com">
+          <label>Usuario (Para iniciar sesión) *</label>
+          <input class="form-control" id="u-username" type="text" placeholder="Ej: jperez">
         </div>
       </div>
       <div class="form-row two-cols">
@@ -255,8 +255,13 @@
           <input class="form-control" id="u-pass" type="password" placeholder="Mínimo 6 caracteres">
         </div>
         <div class="form-group">
-          <label>Rol *</label>
-          <select class="form-control" id="u-role">
+          <label>Correo Electrónico (Opcional)</label>
+          <input class="form-control" id="u-email" type="email" placeholder="juan@empresa.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select class="form-control" id="u-role">
             <option value="user">Usuario</option>
             <option value="manager">Gerente</option>
             <option value="admin">Administrador</option>
@@ -284,6 +289,6 @@
   </div>
 </div>
 
-<script src="compliance_app.js?v=7"></script>
+<script src="compliance_app.js?v=8"></script>
 </body>
 </html>

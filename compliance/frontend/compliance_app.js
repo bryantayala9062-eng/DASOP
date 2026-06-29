@@ -460,12 +460,12 @@ async function renderUsers() {
 
   pc.innerHTML = headerHtml + (users.length === 0 ? '<div class="empty-state">No hay usuarios.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
-      <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Departamento</th><th>Estado</th></tr></thead>
+      <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Departamento</th><th>Estado</th></tr></thead>
       <tbody>${users.map(u => `<tr>
         <td style="font-weight:500"><div style="display:flex;align-items:center;gap:8px">
           <div class="avatar" style="width:28px;height:28px;font-size:0.7rem">${u.initials || 'U'}</div>${u.fullName}
         </div></td>
-        <td>${u.email}</td>
+        <td>${u.username || u.email || '—'}</td>
         <td style="text-transform:capitalize">${roleLabel(u.role)}</td>
         <td>${u.department || '—'}</td>
         <td><span class="badge badge-${u.status === 'active' ? 'green' : 'red'}">${u.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
@@ -476,6 +476,7 @@ async function renderUsers() {
 
 function openUserModal() {
   document.getElementById('u-name').value = '';
+  document.getElementById('u-username').value = '';
   document.getElementById('u-email').value = '';
   document.getElementById('u-pass').value = '';
   document.getElementById('u-role').value = 'user';
@@ -485,15 +486,16 @@ function openUserModal() {
 
 async function submitUser() {
   const full_name = document.getElementById('u-name').value.trim();
+  const username = document.getElementById('u-username').value.trim();
   const email = document.getElementById('u-email').value.trim();
   const password = document.getElementById('u-pass').value.trim();
   const role = document.getElementById('u-role').value;
   const department = document.getElementById('u-dept').value;
 
-  if (!full_name || !email || !password) return toast('Completa los campos obligatorios', 'error');
+  if (!full_name || !username || !password) return toast('Completa los campos obligatorios', 'error');
   if (password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
 
-  const payload = { full_name, email, password, role, department: department || null };
+  const payload = { full_name, username, email: email || null, password, role, department: department || null };
 
   try {
     const res = await fetch(`${API}/api/users`, {

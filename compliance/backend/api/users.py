@@ -12,7 +12,8 @@ router = APIRouter(prefix="/api/users", tags=["Usuarios"])
 
 class UserCreate(BaseModel):
     full_name: str
-    email: str
+    username: str
+    email: Optional[str] = None
     password: str
     role: str = "employee"
     department: Optional[str] = None
@@ -49,12 +50,13 @@ def list_users(db: Session = Depends(get_db), current_user: models.User = Depend
 
 @router.post("", status_code=201)
 def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
-    existing = db.query(models.User).filter(models.User.email == data.email).first()
+    existing = db.query(models.User).filter(models.User.username == data.username).first()
     if existing:
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
+        raise HTTPException(status_code=400, detail="El nombre de usuario ya está registrado")
 
     user = models.User(
         full_name=data.full_name,
+        username=data.username,
         email=data.email,
         password_hash=get_password_hash(data.password),
         role=data.role,
