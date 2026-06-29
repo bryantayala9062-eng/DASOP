@@ -69,6 +69,7 @@
 
 <!-- ── APP (WORKSPACE) ────────────────────────────────────────────────────── -->
 <div id="app" style="display:none;">
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
     <div class="sidebar-logo">
@@ -99,9 +100,12 @@
   <!-- MAIN -->
   <main class="main">
     <div class="topbar">
-      <div>
-        <h2 id="page-title">Dashboard</h2>
-        <div class="topbar-sub" id="page-sub">Panel de cumplimiento</div>
+      <div style="display:flex; align-items:center; gap:12px">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <h2 id="page-title">Dashboard</h2>
+          <div class="topbar-sub" id="page-sub">Panel de cumplimiento</div>
+        </div>
       </div>
       <div class="topbar-right">
         <button class="notif-btn" onclick="showPage('alerts')">

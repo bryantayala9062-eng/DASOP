@@ -178,6 +178,9 @@ function showPage(page) {
   const navEl = document.getElementById(`nav-${page}`);
   if (navEl) navEl.classList.add('active');
 
+  // Cerrar sidebar en móviles al cambiar de página
+  document.body.classList.remove('sidebar-open');
+
   // Hide static pages
   document.getElementById('page-reports').style.display = 'none';
   document.getElementById('page-kpis').style.display = 'none';
@@ -477,8 +480,5 @@ function toast(msg, type = 'success') {
 
 // ── MOBILE SIDEBAR TOGGLE ────────────────────────────────
 window.toggleSidebar = function() {
-  const s = document.getElementById('main-sidebar');
-  const o = document.getElementById('sidebar-overlay');
-  if (s) s.classList.toggle('open');
-  if (o) o.classList.toggle('open');
+  document.body.classList.toggle('sidebar-open');
 };
