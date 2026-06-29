@@ -447,7 +447,15 @@ async function renderUsers() {
   const pc = document.getElementById('page-content');
   if (currentUser.role !== 'admin') { pc.innerHTML = '<div class="empty-state">No tienes permisos.</div>'; return; }
   const users = await api('/api/users') || [];
-  pc.innerHTML = users.length === 0 ? '<div class="empty-state">No hay usuarios.</div>' : `
+  
+  const headerHtml = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h2><span class="icon">👥</span> Usuarios del Sistema</h2>
+      <button class="btn-primary" onclick="openUserModal()">+ Crear Usuario</button>
+    </div>
+  `;
+
+  pc.innerHTML = headerHtml + (users.length === 0 ? '<div class="empty-state">No hay usuarios.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
       <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Departamento</th><th>Estado</th></tr></thead>
       <tbody>${users.map(u => `<tr>
@@ -460,7 +468,47 @@ async function renderUsers() {
         <td><span class="badge badge-${u.status === 'active' ? 'green' : 'red'}">${u.status === 'active' ? 'Activo' : 'Inactivo'}</span></td>
       </tr>`).join('')}</tbody>
     </table></div>
-  `;
+  `);
+}
+
+function openUserModal() {
+  document.getElementById('u-name').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-pass').value = '';
+  document.getElementById('u-role').value = 'user';
+  document.getElementById('u-dept').value = '';
+  openModal('modal-user');
+}
+
+async function submitUser() {
+  const full_name = document.getElementById('u-name').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const password = document.getElementById('u-pass').value.trim();
+  const role = document.getElementById('u-role').value;
+  const department = document.getElementById('u-dept').value;
+
+  if (!full_name || !email || !password) return toast('Completa los campos obligatorios', 'error');
+  if (password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
+
+  const payload = { full_name, email, password, role, department: department || null };
+
+  try {
+    const res = await fetch(`${API}/api/users`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      toast('Usuario creado exitosamente', 'success');
+      closeModal('modal-user');
+      renderUsers();
+    } else {
+      const d = await res.json();
+      toast(d.detail || 'Error al crear usuario', 'error');
+    }
+  } catch (e) {
+    toast('Error de red', 'error');
+  }
 }
 
 // ── UTILS ────────────────────────────────────────────────

@@ -231,6 +231,59 @@
   </div>
 </div>
 
-<script src="compliance_app.js?v=4"></script>
+<!-- MODAL USUARIO -->
+<div class="modal-overlay" id="modal-user" onclick="if(event.target===this) closeModal('modal-user')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Crear Usuario</h3>
+      <button class="modal-close" onclick="closeModal('modal-user')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nombre Completo *</label>
+          <input class="form-control" id="u-name" type="text" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico *</label>
+          <input class="form-control" id="u-email" type="email" placeholder="juan@empresa.com">
+        </div>
+      </div>
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input class="form-control" id="u-pass" type="password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label>Rol *</label>
+          <select class="form-control" id="u-role">
+            <option value="user">Usuario</option>
+            <option value="manager">Gerente</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Departamento</label>
+        <select class="form-control" id="u-dept">
+          <option value="">Seleccione... (Opcional para admin)</option>
+          <option value="Legal">Legal</option>
+          <option value="Administración">Administración</option>
+          <option value="Tesorería">Tesorería</option>
+          <option value="Contabilidad">Contabilidad</option>
+          <option value="Operaciones">Operaciones</option>
+          <option value="RH">Recursos Humanos</option>
+          <option value="Facturación">Facturación</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-user')">Cancelar</button>
+      <button class="btn-primary" style="width:auto" onclick="submitUser()">Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<script src="compliance_app.js?v=5"></script>
 </body>
 </html>
