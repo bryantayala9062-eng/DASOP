@@ -384,14 +384,19 @@ async function loadKPIs() {
             <option value="Operaciones">Operaciones</option><option value="RH">RH</option>
           </select>
         </div>
-        <div class="form-group"><label>Score Global (%)</label>
-          <input class="form-control" id="kpi-score" type="number" min="0" max="100" placeholder="85">
+        <div class="form-group"><label>Colaborador / Responsable</label>
+          <input class="form-control" id="kpi-collab" type="text" placeholder="Ej: Pedro Ruiz">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="form-group"><label>Mes</label>
           <input class="form-control" id="kpi-month" type="number" min="1" max="12" value="${new Date().getMonth()+1}">
         </div>
+        <div class="form-group"><label>Score Global (%)</label>
+          <input class="form-control" id="kpi-score" type="number" min="0" max="100" placeholder="85">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="form-group"><label>Año</label>
           <input class="form-control" id="kpi-year" type="number" value="${new Date().getFullYear()}">
         </div>
@@ -408,9 +413,10 @@ async function loadKPIs() {
     <h3>Historial de Evaluaciones</h3>
     ${history.length === 0 ? '<div class="empty-state">No hay evaluaciones registradas.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
-      <thead><tr><th>Departamento</th><th>Periodo</th><th>Score</th><th>Evaluador</th><th>Fecha</th><th>Archivo</th></tr></thead>
+      <thead><tr><th>Departamento</th><th>Colaborador</th><th>Periodo</th><th>Score</th><th>Evaluador</th><th>Fecha</th><th>Archivo</th></tr></thead>
       <tbody>${history.map(e => `<tr>
         <td>${e.department}</td>
+        <td>${e.collaborator_name || '—'}</td>
         <td>${e.period_month}/${e.period_year}</td>
         <td style="font-weight:700;color:${e.global_score >= 80 ? 'var(--green)' : e.global_score >= 50 ? 'var(--orange)' : 'var(--red)'}">${e.global_score}%</td>
         <td>${e.evaluator_name}</td>
@@ -431,6 +437,8 @@ async function submitKPI() {
 
   const fd = new FormData();
   fd.append('department', document.getElementById('kpi-dept').value);
+  const collab = document.getElementById('kpi-collab').value.trim();
+  if (collab) fd.append('collaborator_name', collab);
   fd.append('period_month', document.getElementById('kpi-month').value);
   fd.append('period_year', document.getElementById('kpi-year').value);
   fd.append('global_score', score);

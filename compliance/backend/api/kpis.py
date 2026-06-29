@@ -20,6 +20,7 @@ async def upload_kpi_evaluation(
     period_month: int = Form(...),
     period_year: int = Form(...),
     global_score: float = Form(...),
+    collaborator_name: Optional[str] = Form(None),
     comments: Optional[str] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -48,6 +49,7 @@ async def upload_kpi_evaluation(
 
     if existing_eval:
         existing_eval.global_score = global_score
+        existing_eval.collaborator_name = collaborator_name
         existing_eval.comments = comments
         existing_eval.evaluated_by_user_id = current_user.id
         existing_eval.evaluation_date = datetime.now(timezone.utc)
@@ -66,6 +68,7 @@ async def upload_kpi_evaluation(
             period_month=period_month,
             period_year=period_year,
             global_score=global_score,
+            collaborator_name=collaborator_name,
             comments=comments,
             evaluated_by_user_id=current_user.id
         )
@@ -117,6 +120,7 @@ def get_kpi_history(
             "period_month": e.period_month,
             "period_year": e.period_year,
             "global_score": e.global_score,
+            "collaborator_name": e.collaborator_name,
             "comments": e.comments,
             "evaluation_date": e.evaluation_date.isoformat() if e.evaluation_date else None,
             "evaluator_name": e.evaluator.full_name if e.evaluator else "Desconocido",

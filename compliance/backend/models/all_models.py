@@ -305,6 +305,7 @@ class KPIEvaluation(Base):
     period_month = Column(Integer)
     period_year = Column(Integer)
     global_score = Column(Float, default=0.0)
+    collaborator_name = Column(String, nullable=True) # Nombre del subordinado/responsable
     comments = Column(Text, nullable=True)
     evaluated_by_user_id = Column(Integer, ForeignKey("users.id"), index=True)
     evaluation_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
