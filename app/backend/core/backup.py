@@ -130,11 +130,11 @@ def ejecutar_respaldo():
                 conn = sqlite3.connect(db_path)
                 c = conn.cursor()
                 c.execute('''
-                    SELECT id, emisora, cliente, ruta_fisica, ruta_notificacion, ruta_convenio, ruta_mandato
+                    SELECT id, emisora, cliente, ruta_fisica, ruta_notificacion, ruta_convenio
                     FROM contratos_cafi
                 ''')
                 for row in c.fetchall():
-                    cafi_id, emisora, cliente, r_fisica, r_notificacion, r_convenio, r_mandato = row
+                    cafi_id, emisora, cliente, r_fisica, r_notificacion, r_convenio = row
                     
                     empresa_clean = clean_folder_name(emisora) if emisora else "DESCONOCIDA"
                     cli_abbr = abbreviate_name(cliente) if cliente else "DESCONOCIDO"
@@ -146,8 +146,7 @@ def ejecutar_respaldo():
                     archivos = [
                         (r_fisica, "CONTRATO_CAFI"),
                         (r_notificacion, "NOTIFICACION_CAFI"),
-                        (r_convenio, "CONVENIO_CAFI"),
-                        (r_mandato, "MANDATO_CAFI")
+                        (r_convenio, "CONVENIO_CAFI")
                     ]
                     
                     for ruta_arch, prefijo in archivos:
@@ -161,48 +160,6 @@ def ejecutar_respaldo():
                             shutil.copy2(src_path, os.path.join(dest_folder, new_filename))
 
                 conn.close()
-
-                # 6. Respaldar Compliance
-                compliance_dir = os.path.join(os.path.dirname(PROJECT_ROOT), "compliance", "backend")
-                compliance_db = os.path.join(compliance_dir, "complianceop.db")
-                if os.path.exists(compliance_db):
-                    shutil.copy2(compliance_db, os.path.join(BACKUP_DIR, "complianceop.db"))
-                    
-                    try:
-                        c_conn = sqlite3.connect(compliance_db)
-                        c_c = c_conn.cursor()
-                        
-                        # Respaldar Evidencias de Reportes
-                        c_c.execute('''
-                            SELECT e.file_path, r.department, r.period_year, r.period_month
-                            FROM evidences e
-                            JOIN department_reports r ON e.report_id = r.id
-                            WHERE e.file_path IS NOT NULL
-                        ''')
-                        for file_path, dept, year, month in c_c.fetchall():
-                            src = os.path.join(compliance_dir, file_path) if not os.path.isabs(file_path) else file_path
-                            if os.path.exists(src):
-                                dest = os.path.join(BACKUP_DIR, "COMPLIANCE", clean_folder_name(dept), f"{year}_{month:02d}")
-                                os.makedirs(dest, exist_ok=True)
-                                shutil.copy2(src, os.path.join(dest, os.path.basename(src)))
-                        
-                        # Respaldar Evidencias de KPIs
-                        c_c.execute('''
-                            SELECT e.file_path, k.department, k.period_year, k.period_month
-                            FROM evidences e
-                            JOIN kpi_evaluations k ON e.kpi_eval_id = k.id
-                            WHERE e.file_path IS NOT NULL
-                        ''')
-                        for file_path, dept, year, month in c_c.fetchall():
-                            src = os.path.join(compliance_dir, file_path) if not os.path.isabs(file_path) else file_path
-                            if os.path.exists(src):
-                                dest = os.path.join(BACKUP_DIR, "COMPLIANCE", clean_folder_name(dept), f"{year}_{month:02d}")
-                                os.makedirs(dest, exist_ok=True)
-                                shutil.copy2(src, os.path.join(dest, os.path.basename(src)))
-                                
-                        c_conn.close()
-                    except Exception as ce:
-                        logger.error(f"Error procesando respaldos de compliance: {ce}")
             except Exception as e:
                 logger.error(f"Error reading DB for organized backup: {e}")
         else:

@@ -235,8 +235,8 @@ async function renderDashboard() {
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
       <h2>Matriz de Cumplimiento ${data.year}</h2>
     </div>
-    <div class="data-table-wrapper" style="overflow-x:auto;">
-      <table class="data-table" style="min-width:900px;">
+    <div class="data-table-wrapper matrix-wrapper" style="overflow-x:auto;">
+      <table class="data-table matrix-table" style="min-width:900px;">
         <thead><tr><th>Área</th>${months.map(m => `<th>${m}</th>`).join('')}</tr></thead>
         <tbody>
           ${data.matrix.map(row => `<tr>
