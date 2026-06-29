@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=4.2">
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -69,8 +69,6 @@
 
 <!-- ── APP (WORKSPACE) ────────────────────────────────────────────────────── -->
 <div id="app" style="display:none;">
-  <!-- SIDEBAR MOBILE OVERLAY -->
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
     <div class="sidebar-logo">
@@ -101,12 +99,9 @@
   <!-- MAIN -->
   <main class="main">
     <div class="topbar">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-        <div>
-          <h2 id="page-title">Dashboard</h2>
-          <div class="topbar-sub" id="page-sub">Panel de cumplimiento</div>
-        </div>
+      <div>
+        <h2 id="page-title">Dashboard</h2>
+        <div class="topbar-sub" id="page-sub">Panel de cumplimiento</div>
       </div>
       <div class="topbar-right">
         <button class="notif-btn" onclick="showPage('alerts')">
@@ -158,25 +153,7 @@
         <!-- Relleno dinámico -->
       </div>
     </div>
-<!-- ── FACTURACIÓN ───────────────────────────────────────────────────────── -->
 <div id="toast-container"></div>
-
-
-
-<!-- Modal Historial Timeline -->
-<div class="modal-overlay" id="modal-timeline" onclick="closeModal('modal-timeline')">
-  <div class="modal-card" style="max-width: 500px;" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3 id="timeline-title">Historial del Contrato</h3>
-      <button class="modal-close" onclick="closeModal('modal-timeline')">✕</button>
-    </div>
-    <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
-      <div id="timeline-container" class="timeline-container">
-        <!-- Relleno dinámico -->
-      </div>
-    </div>
-  </div>
-</div>
 
 
 
@@ -250,6 +227,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6.4"></script>
+<script src="compliance_app.js"></script>
 </body>
 </html>
