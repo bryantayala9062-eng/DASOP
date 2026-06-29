@@ -2,8 +2,9 @@
 //  Compliance Op — app.js v10 CLEAN (Reporting Only)
 // ═══════════════════════════════════════════════════════
 const API = '';
-let token = localStorage.getItem('token');
-let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+localStorage.clear(); // Limpiar sesiones antiguas persistentes
+let token = sessionStorage.getItem('token');
+let currentUser = JSON.parse(sessionStorage.getItem('user') || 'null');
 let activeModule = null;
 let currentPage = 'dashboard';
 
@@ -65,8 +66,8 @@ async function doLogin() {
     if (res.ok) {
       token = data.token || data.access_token;
       currentUser = data.user;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(currentUser));
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('user', JSON.stringify(currentUser));
       showModuleSelector();
     } else {
       errEl.textContent = 'Usuario o contraseña incorrectos';
@@ -80,7 +81,7 @@ async function doLogin() {
   btn.textContent = 'Iniciar sesión'; btn.disabled = false;
 }
 
-function doLogout() { localStorage.clear(); location.reload(); }
+function doLogout() { sessionStorage.clear(); location.reload(); }
 
 // ── MODULE SELECTOR ──────────────────────────────────────
 async function showModuleSelector() {
