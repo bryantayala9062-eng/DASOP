@@ -80,14 +80,14 @@
 
 /* ── Variables ─────────────────────────────────────────── */
 :root {
-  --bg:           #0f0f12; /* Deep space dark */
-  --bg2:          #16161a;
-  --bg3:          #232329;
+  --bg:           #333132; /* DashOP Brand Gray */
+  --bg2:          #3C3A3B;
+  --bg3:          #4A4849;
   --brand-gray:   #333132;
   
-  --bg-card:      rgba(22, 22, 26, 0.6);
-  --border:       rgba(255,255,255,0.06);
-  --border-light: rgba(255,255,255,0.12);
+  --bg-card:      rgba(40, 38, 39, 0.75);
+  --border:       rgba(255,255,255,0.08);
+  --border-light: rgba(255,255,255,0.15);
   
   --text:         #FFFFFF;
   --text2:        #B2B2B2;
@@ -116,11 +116,6 @@ html { font-size: 15px; }
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--bg);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
   background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
