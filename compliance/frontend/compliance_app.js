@@ -315,6 +315,13 @@ async function downloadFile(url, fileName) {
 // ── REPORTS PAGE ─────────────────────────────────────────
 async function loadReports() {
   const dept = deptForModule(activeModule);
+  
+  // Ocultar botón de subida en vista general
+  const btnUpload = document.getElementById('btn-upload-report');
+  if (btnUpload) {
+    btnUpload.style.display = (activeModule === 'general') ? 'none' : 'block';
+  }
+
   const reports = await api(`/api/department-reports${dept ? `?department=${encodeURIComponent(dept)}` : ''}`) || [];
   const tbody = document.getElementById('reports-list');
   if (reports.length === 0) {
@@ -399,44 +406,58 @@ async function loadKPIs() {
   const container = document.getElementById('kpis-container');
   const history = await api(`/api/kpis/evaluation/history${dept ? `?department=${encodeURIComponent(dept)}` : ''}`) || [];
 
-  container.innerHTML = `
-    <div style="background:var(--bg2);padding:24px;border-radius:12px;border:1px solid var(--border);margin-bottom:24px">
-      <h3 style="margin:0 0 16px">Subir Evaluación de KPIs</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div class="form-group"><label>Departamento</label>
-          <select class="form-control" id="kpi-dept">
-            <option value="Legal">Legal</option><option value="Administración">Administración</option>
-            <option value="Tesorería">Tesorería</option><option value="Contabilidad">Contabilidad</option>
-            <option value="Operaciones">Operaciones</option><option value="RH">RH</option>
-          </select>
+  let html = '';
+  
+  // Mostrar formulario solo si NO estamos en vista general
+  if (activeModule !== 'general') {
+    html += `
+      <div style="background:var(--bg2);padding:24px;border-radius:12px;border:1px solid var(--border);margin-bottom:24px">
+        <h3 style="margin:0 0 16px">Subir Evaluación de KPIs</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group"><label>Departamento</label>
+            <select class="form-control" id="kpi-dept">
+              <option value="Legal" ${dept === 'Legal' ? 'selected' : ''}>Legal</option>
+              <option value="Administración" ${dept === 'Administración' ? 'selected' : ''}>Administración</option>
+              <option value="Tesorería" ${dept === 'Tesorería' ? 'selected' : ''}>Tesorería</option>
+              <option value="Contabilidad" ${dept === 'Contabilidad' ? 'selected' : ''}>Contabilidad</option>
+              <option value="Operaciones" ${dept === 'Operaciones' ? 'selected' : ''}>Operaciones</option>
+              <option value="RH" ${dept === 'RH' ? 'selected' : ''}>RH</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Colaborador / Responsable</label>
+            <input class="form-control" id="kpi-collab" type="text" placeholder="Ej: Pedro Ruiz">
+          </div>
         </div>
-        <div class="form-group"><label>Colaborador / Responsable</label>
-          <input class="form-control" id="kpi-collab" type="text" placeholder="Ej: Pedro Ruiz">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group"><label>Mes</label>
+            <input class="form-control" id="kpi-month" type="number" min="1" max="12" value="${new Date().getMonth()+1}">
+          </div>
+          <div class="form-group"><label>Score Global (%)</label>
+            <input class="form-control" id="kpi-score" type="number" min="0" max="100" placeholder="85">
+          </div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div class="form-group"><label>Mes</label>
-          <input class="form-control" id="kpi-month" type="number" min="1" max="12" value="${new Date().getMonth()+1}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group"><label>Año</label>
+            <input class="form-control" id="kpi-year" type="number" value="${new Date().getFullYear()}">
+          </div>
         </div>
-        <div class="form-group"><label>Score Global (%)</label>
-          <input class="form-control" id="kpi-score" type="number" min="0" max="100" placeholder="85">
+        <div class="form-group"><label>Comentarios</label>
+          <textarea class="form-control" id="kpi-comments" rows="2" placeholder="Notas..."></textarea>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div class="form-group"><label>Año</label>
-          <input class="form-control" id="kpi-year" type="number" value="${new Date().getFullYear()}">
+        <div class="form-group"><label>Archivo de Evidencia (PDF/Excel)</label>
+          <div style="display:flex;gap:12px;align-items:center;background:var(--bg3);padding:8px 12px;border-radius:6px;border:1px solid var(--border)">
+            <input type="file" id="kpi-file" style="display:none" onchange="document.getElementById('kpi-file-name').textContent = this.files[0] ? this.files[0].name : 'No se eligió ningún archivo'">
+            <button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem" onclick="document.getElementById('kpi-file').click()">Elegir archivo</button>
+            <span id="kpi-file-name" style="color:var(--text3);font-size:0.85rem">No se eligió ningún archivo</span>
+          </div>
         </div>
+        <button class="btn-primary" onclick="submitKPIEval()">Subir KPIs</button>
       </div>
-      <div class="form-group"><label>Comentarios</label>
-        <textarea class="form-control" id="kpi-comments" rows="2" placeholder="Notas..."></textarea>
-      </div>
-      <div class="form-group"><label>Archivo de evidencia (PDF/Excel)</label>
-        <input type="file" id="kpi-file" accept=".pdf,.xls,.xlsx,.doc,.docx" style="color:var(--text2)">
-      </div>
-      <button class="btn-primary" style="width:auto;margin-top:8px" onclick="submitKPI()">Subir KPIs</button>
-    </div>
+    `;
+  }
 
-    <h3>Historial de Evaluaciones</h3>
+  html += `
+    <h3 style="margin:0 0 16px">Historial de Evaluaciones</h3>
     ${history.length === 0 ? '<div class="empty-state">No hay evaluaciones registradas.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
       <thead><tr><th>Departamento</th><th>Colaborador</th><th>Periodo</th><th>Score</th><th>Evaluador</th><th>Fecha</th><th>Archivo</th></tr></thead>
@@ -451,8 +472,7 @@ async function loadKPIs() {
       </tr>`).join('')}</tbody>
     </table></div>`}
   `;
-
-  if (dept) document.getElementById('kpi-dept').value = dept;
+  container.innerHTML = html;
 }
 
 async function submitKPI() {
