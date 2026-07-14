@@ -67,31 +67,7 @@ class UserUpdate(BaseModel):
     activo: Optional[bool] = None
 
 
-@router.get("/autologin")
-def autologin(db: Session = Depends(get_db)):
-    """Genera un token automáticamente para el usuario admin sin requerir contraseña."""
-    user = db.query(Usuario).filter(Usuario.username == "admin").first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario admin no encontrado")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "nombre": user.nombre,
-            "es_admin": user.es_admin,
-            "mod_legal": user.mod_legal,
-            "mod_materialidad": user.mod_materialidad,
-            "mod_dashboard": user.mod_dashboard,
-            "departamento": user.departamento,
-            "empresa_filtro": user.empresa_filtro,
-        },
-    }
+
 
 
 @router.post("/login")

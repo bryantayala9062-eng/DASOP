@@ -36,7 +36,7 @@ const MaterialidadUpload = () => {
     // CAFIS
     const [cafis, setCafis] = useState<any[]>([]);
     const [cafiListSearch, setCafiListSearch] = useState('');
-    const [cafiFilterEmisora, setCafiFilterEmisora] = useState<'Todos' | 'EXFIS' | 'HOLDINGS'>('Todos');
+    const [cafiFilterEmisora, setCafiFilterEmisora] = useState<'Todos' | 'EXFIS' | 'HOLDINGS' | 'NAMUR MONS'>('Todos');
     const [clientesUnicos, setClientesUnicos] = useState<string[]>([]);
     const [cafiLoading, setCafiLoading] = useState(false);
     const [showCafiModal, setShowCafiModal] = useState(false);
@@ -829,7 +829,7 @@ interface DocPorVincular {
                                 <FileText size={20} className="text-amber-400" /> Directorio de CAFI
                             </h3>
                             <div className="mt-3 flex gap-2">
-                                {['Todos', 'EXFIS', 'HOLDINGS'].map(f => (
+                                {['Todos', 'EXFIS', 'HOLDINGS', 'NAMUR MONS'].map(f => (
                                     <button 
                                         key={f} 
                                         onClick={() => setCafiFilterEmisora(f as any)}
@@ -1065,6 +1065,7 @@ interface DocPorVincular {
                                     <option value="">-- Selecciona --</option>
                                     <option value="EXFIS">EXFIS</option>
                                     <option value="HOLDINGS">HOLDINGS</option>
+                                    <option value="NAMUR MONS">NAMUR MONS</option>
                                 </select>
                             </div>
                             

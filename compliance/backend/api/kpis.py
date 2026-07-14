@@ -132,3 +132,33 @@ def get_kpi_history(
         })
         
     return result
+
+
+@router.delete("/evaluation/{eval_id}", status_code=204)
+def delete_kpi_evaluation(
+    eval_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Elimina una evaluación de KPIs y sus evidencias. Solo admin."""
+    evaluation = db.query(KPIEvaluation).filter(KPIEvaluation.id == eval_id).first()
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+
+    if current_user.role != "admin" and evaluation.department != current_user.department:
+        raise HTTPException(status_code=403, detail="Solo administradores pueden eliminar evaluaciones de otros departamentos")
+
+    # Eliminar evidencias asociadas
+    evidences = db.query(Evidence).filter(Evidence.kpi_eval_id == eval_id).all()
+    for ev in evidences:
+        if ev.file_path and os.path.exists(ev.file_path):
+            try:
+                os.remove(ev.file_path)
+            except Exception:
+                pass
+        db.delete(ev)
+
+    db.delete(evaluation)
+    db.commit()
+
+    return None

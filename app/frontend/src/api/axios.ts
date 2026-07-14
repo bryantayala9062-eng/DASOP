@@ -15,26 +15,16 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Si el token expiró (401), renovarlo automáticamente via autologin y reintentar
 api.interceptors.response.use(
     (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
+    (error) => {
         if (
             error.response?.status === 401 &&
-            !originalRequest._retry &&
-            !originalRequest.url?.includes('/autologin')
+            !error.config.url?.includes('/login')
         ) {
-            originalRequest._retry = true;
-            try {
-                const res = await axios.get(`${API_URL}/api/auth/autologin`);
-                const newToken = res.data.access_token;
-                sessionStorage.setItem('token', newToken);
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                return api(originalRequest);
-            } catch {
-                // Si autologin falla, continuar con el error original
-            }
+            sessionStorage.removeItem('token');
+            // Redirigir al usuario al login para que renueve su sesión
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }

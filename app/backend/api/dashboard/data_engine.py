@@ -681,13 +681,9 @@ class DataEngine:
         unique_clientes = set(links_df['CLIENTE'].unique())
         
         # Pre-calculate node totals
-        node_volumes = {}
-        for _, row in links_df.iterrows():
-            e = str(row['EMPRESA'])
-            c = str(row['CLIENTE'])
-            v = float(row[value_col])
-            node_volumes[e] = node_volumes.get(e, 0) + v
-            node_volumes[c] = node_volumes.get(c, 0) + v
+        emp_vols = links_df.groupby('EMPRESA')[value_col].sum()
+        cli_vols = links_df.groupby('CLIENTE')[value_col].sum()
+        node_volumes = emp_vols.add(cli_vols, fill_value=0).to_dict()
             
         nodes = []
         for e in unique_empresas:
@@ -710,8 +706,11 @@ class DataEngine:
                 })
                 
         # Build Links
+        safe_limit = max(10, min(int(limit), 1000))
+        links_df = links_df.sort_values(value_col, ascending=False).head(safe_limit)
+        
         links = []
-        for _, row in links_df.iterrows():
+        for row in links_df.to_dict('records'):
             source = str(row['EMPRESA'])
             target = str(row['CLIENTE'])
             value = float(row[value_col])
@@ -721,10 +720,6 @@ class DataEngine:
                 "value": value,
                 "label": f"${value:,.2f}"
             })
-            
-        # Dynamic limit (default 100, max 1000) — sorted by value descending
-        safe_limit = max(10, min(int(limit), 1000))
-        links = sorted(links, key=lambda x: x['value'], reverse=True)[:safe_limit]
 
         # Filter nodes to only those that exist in the top N links (prevent orphans)
         active_nodes = set()
@@ -1705,17 +1700,31 @@ class DataEngine:
         
         results = []
         if cruzados:
+            cruzados_list = list(cruzados)
+            # Compute totals once
+            emite_totals = df[df['EMPRESA'].isin(cruzados_list)].groupby('EMPRESA')['TOTAL NETO'].sum().to_dict()
+            recibe_totals = df[df['CLIENTE'].isin(cruzados_list)].groupby('CLIENTE')['TOTAL NETO'].sum().to_dict()
+            
+            # Compute providers once
+            prov_df = df[df['CLIENTE'].isin(cruzados_list)].groupby(['CLIENTE', 'EMPRESA'])['TOTAL NETO'].sum().reset_index()
+            
+            # Group providers by cliente
+            prov_dict = {}
+            for row in prov_df.to_dict('records'):
+                c = row['CLIENTE']
+                if c not in prov_dict:
+                    prov_dict[c] = []
+                prov_dict[c].append({"empresa": row['EMPRESA'], "monto": float(row['TOTAL NETO'])})
+            
             for c in sorted(cruzados):
-                emite = float(df[df['EMPRESA'] == c]['TOTAL NETO'].sum())
-                recibe = float(df[df['CLIENTE'] == c]['TOTAL NETO'].sum())
+                emite = float(emite_totals.get(c, 0))
+                recibe = float(recibe_totals.get(c, 0))
                 if emite == 0 or recibe == 0:
                     continue
                 ratio = emite / recibe if recibe > 0 else float('inf')
                 
-                # Get the providers of this company
-                proveedores = df[df['CLIENTE'] == c].groupby('EMPRESA')['TOTAL NETO'].sum().reset_index()
-                proveedores = proveedores.sort_values('TOTAL NETO', ascending=False)
-                prov_list = [{"empresa": row['EMPRESA'], "monto": float(row['TOTAL NETO'])} for _, row in proveedores.iterrows()]
+                prov_list = prov_dict.get(c, [])
+                prov_list.sort(key=lambda x: x['monto'], reverse=True)
                 
                 results.append({
                     "empresa": c,
@@ -1748,17 +1757,31 @@ class DataEngine:
         multi.columns = ['cliente', 'num_empresas', 'total']
         multi = multi[multi['num_empresas'] >= min_empresas].sort_values('total', ascending=False)
         
+        if multi.empty:
+            return []
+            
+        clientes_multi = multi['cliente'].tolist()
+        # Group by CLIENTE and EMPRESA once
+        emps_df = df[df['CLIENTE'].isin(clientes_multi)].groupby(['CLIENTE', 'EMPRESA'])['TOTAL NETO'].sum().reset_index()
+        
+        # Build dict of lists
+        emps_dict = {}
+        for row in emps_df.to_dict('records'):
+            c = row['CLIENTE']
+            if c not in emps_dict:
+                emps_dict[c] = []
+            emps_dict[c].append({"empresa": row['EMPRESA'], "monto": float(row['TOTAL NETO'])})
+        
         results = []
-        for _, r in multi.iterrows():
-            cliente = r['cliente']
-            emps = df[df['CLIENTE'] == cliente].groupby('EMPRESA')['TOTAL NETO'].sum().reset_index()
-            emps = emps.sort_values('TOTAL NETO', ascending=False)
-            emps_list = [{"empresa": row['EMPRESA'], "monto": float(row['TOTAL NETO'])} for _, row in emps.iterrows()]
+        for row in multi.to_dict('records'):
+            cliente = row['cliente']
+            emps_list = emps_dict.get(cliente, [])
+            emps_list.sort(key=lambda x: x['monto'], reverse=True)
             
             results.append({
                 "cliente": cliente,
-                "num_empresas": int(r['num_empresas']),
-                "total_recibido": float(r['total']),
+                "num_empresas": int(row['num_empresas']),
+                "total_recibido": float(row['total']),
                 "empresas_emisoras": emps_list
             })
             

@@ -276,13 +276,15 @@ window.openPeriodDetails = function(dept, month) {
   let reportHtml = '<p style="color:var(--red)">✘ No hay reporte de área cargado.</p>';
   if (m.report) {
     let dl = m.report.evidence ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;margin-top:5px" onclick="downloadFile('${API}${m.report.evidence.file_path}','${m.report.evidence.file_name}')">📥 Descargar</button>` : '';
-    reportHtml = `<p style="color:var(--green)">✔ Reporte cargado.</p>${dl}`;
+    let del = currentUser.role === 'admin' ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;margin-top:5px;margin-left:6px;color:var(--red)" onclick="deleteReportFromModal(${m.report.id})">🗑️ Eliminar</button>` : '';
+    reportHtml = `<p style="color:var(--green)">✔ Reporte cargado.</p><div style="display:flex;gap:4px;flex-wrap:wrap">${dl}${del}</div>`;
   }
 
   let kpiHtml = '<p style="color:var(--red)">✘ No hay evaluación de KPIs.</p>';
   if (m.kpiEval) {
     let dl = m.kpiEval.evidence ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;margin-top:5px" onclick="downloadFile('${API}${m.kpiEval.evidence.file_path}','${m.kpiEval.evidence.file_name}')">📥 Descargar</button>` : '';
-    kpiHtml = `<p style="color:var(--green)">✔ KPIs cargados (Score: ${m.kpiEval.globalScore}%).</p>${dl}`;
+    let del = currentUser.role === 'admin' ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;margin-top:5px;margin-left:6px;color:var(--red)" onclick="deleteKPIFromModal(${m.kpiEval.id})">🗑️ Eliminar</button>` : '';
+    kpiHtml = `<p style="color:var(--green)">✔ KPIs cargados (Score: ${m.kpiEval.globalScore}%).</p><div style="display:flex;gap:4px;flex-wrap:wrap">${dl}${del}</div>`;
   }
 
   document.getElementById('period-details-content').innerHTML = `
@@ -294,6 +296,38 @@ window.openPeriodDetails = function(dept, month) {
     </div>
   `;
   openModal('modal-period-details');
+};
+
+window.deleteReportFromModal = async function(id) {
+  if (!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return;
+  try {
+    const res = await fetch(`${API}/api/department-reports/${id}`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok || res.status === 204) {
+      toast('Reporte eliminado', 'success');
+      closeModal('modal-period-details');
+      renderDashboard();
+    } else {
+      const d = await res.json(); toast(d.detail || 'Error', 'error');
+    }
+  } catch (e) { toast('Error de red', 'error'); }
+};
+
+window.deleteKPIFromModal = async function(id) {
+  if (!confirm('¿Eliminar esta evaluación de KPIs?')) return;
+  try {
+    const res = await fetch(`${API}/api/kpis/evaluation/${id}`, {
+      method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok || res.status === 204) {
+      toast('Evaluación eliminada', 'success');
+      closeModal('modal-period-details');
+      renderDashboard();
+    } else {
+      const d = await res.json(); toast(d.detail || 'Error', 'error');
+    }
+  } catch (e) { toast('Error de red', 'error'); }
 };
 
 async function downloadFile(url, fileName) {
@@ -338,6 +372,7 @@ async function loadReports() {
     <td>
       ${r.evidences?.length ? `<button class="btn-ghost" title="Descargar" style="padding:4px 8px;font-size:0.8rem" onclick="downloadFile('${API}/api/evidences/${r.evidences[0].id}/download','${r.evidences[0].fileName}')">📥</button>` : '—'}
       ${(currentUser.role === 'admin' && r.status !== 'reviewed') ? `<button class="btn-ghost" title="Aprobar Reporte" style="padding:4px 8px;font-size:0.8rem;margin-left:4px" onclick="reviewReport(${r.id})">✅</button>` : ''}
+      ${currentUser.role === 'admin' ? `<button class="btn-ghost" title="Eliminar Reporte" style="padding:4px 8px;font-size:0.8rem;margin-left:4px;color:var(--red)" onclick="deleteReport(${r.id})">🗑️</button>` : ''}
     </td>
   </tr>`).join('');
 }
@@ -359,9 +394,45 @@ async function reviewReport(id) {
   }
 }
 
+async function deleteReport(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.')) return;
+  try {
+    const res = await fetch(`${API}/api/department-reports/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok || res.status === 204) {
+      toast('Reporte eliminado correctamente', 'success');
+      loadReports();
+    } else {
+      const d = await res.json(); toast(d.detail || 'Error al eliminar', 'error');
+    }
+  } catch (e) {
+    toast('Error de red', 'error');
+  }
+}
+
 function openReportModal() {
   const dept = deptForModule(activeModule);
-  if (dept) document.getElementById('rep-dept').value = dept;
+  const sel = document.getElementById('rep-dept');
+  if (dept) {
+    // Bloquear a solo su departamento
+    sel.innerHTML = `<option value="${dept}">${dept}</option>`;
+    sel.disabled = true;
+    sel.style.opacity = '0.7';
+  } else {
+    // Admin: mostrar todos
+    sel.innerHTML = `
+      <option value="Legal">Legal</option>
+      <option value="Administración">Administración</option>
+      <option value="Tesorería">Tesorería</option>
+      <option value="Contabilidad">Contabilidad</option>
+      <option value="Operaciones">Operaciones</option>
+      <option value="RH">Recursos Humanos</option>
+    `;
+    sel.disabled = false;
+    sel.style.opacity = '1';
+  }
   const now = new Date();
   document.getElementById('rep-month').value = now.getMonth() + 1;
   document.getElementById('rep-year').value = now.getFullYear();
@@ -415,34 +486,23 @@ async function loadKPIs() {
         <h3 style="margin:0 0 16px">Subir Evaluación de KPIs</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="form-group"><label>Departamento</label>
-            <select class="form-control" id="kpi-dept">
-              <option value="Legal" ${dept === 'Legal' ? 'selected' : ''}>Legal</option>
-              <option value="Administración" ${dept === 'Administración' ? 'selected' : ''}>Administración</option>
-              <option value="Tesorería" ${dept === 'Tesorería' ? 'selected' : ''}>Tesorería</option>
-              <option value="Contabilidad" ${dept === 'Contabilidad' ? 'selected' : ''}>Contabilidad</option>
-              <option value="Operaciones" ${dept === 'Operaciones' ? 'selected' : ''}>Operaciones</option>
-              <option value="RH" ${dept === 'RH' ? 'selected' : ''}>RH</option>
+            <select class="form-control" id="kpi-dept" ${dept ? 'disabled style="opacity:0.7"' : ''}>
+              ${dept ? `<option value="${dept}" selected>${dept}</option>` : `
+              <option value="Legal">Legal</option>
+              <option value="Administración">Administración</option>
+              <option value="Tesorería">Tesorería</option>
+              <option value="Contabilidad">Contabilidad</option>
+              <option value="Operaciones">Operaciones</option>
+              <option value="RH">RH</option>`}
             </select>
           </div>
-          <div class="form-group"><label>Colaborador / Responsable</label>
-            <input class="form-control" id="kpi-collab" type="text" placeholder="Ej: Pedro Ruiz">
-          </div>
-        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="form-group"><label>Mes</label>
             <input class="form-control" id="kpi-month" type="number" min="1" max="12" value="${new Date().getMonth()+1}">
           </div>
-          <div class="form-group"><label>Score Global (%)</label>
-            <input class="form-control" id="kpi-score" type="number" min="0" max="100" placeholder="85">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="form-group"><label>Año</label>
             <input class="form-control" id="kpi-year" type="number" value="${new Date().getFullYear()}">
           </div>
-        </div>
-        <div class="form-group"><label>Comentarios</label>
-          <textarea class="form-control" id="kpi-comments" rows="2" placeholder="Notas..."></textarea>
         </div>
         <div class="form-group"><label>Archivo de Evidencia (PDF/Excel)</label>
           <div style="display:flex;gap:12px;align-items:center;background:var(--bg3);padding:8px 12px;border-radius:6px;border:1px solid var(--border)">
@@ -451,7 +511,7 @@ async function loadKPIs() {
             <span id="kpi-file-name" style="color:var(--text3);font-size:0.85rem">No se eligió ningún archivo</span>
           </div>
         </div>
-        <button class="btn-primary" onclick="submitKPIEval()">Subir KPIs</button>
+        <button class="btn-primary" onclick="submitKPI()">Subir KPIs</button>
       </div>
     `;
   }
@@ -460,15 +520,16 @@ async function loadKPIs() {
     <h3 style="margin:0 0 16px">Historial de Evaluaciones</h3>
     ${history.length === 0 ? '<div class="empty-state">No hay evaluaciones registradas.</div>' : `
     <div class="data-table-wrapper"><table class="data-table">
-      <thead><tr><th>Departamento</th><th>Colaborador</th><th>Periodo</th><th>Score</th><th>Evaluador</th><th>Fecha</th><th>Archivo</th></tr></thead>
+      <thead><tr><th>Departamento</th><th>Periodo</th><th>Evaluador</th><th>Fecha</th><th>Acciones</th></tr></thead>
       <tbody>${history.map(e => `<tr>
         <td>${e.department}</td>
-        <td>${e.collaborator_name || '—'}</td>
         <td>${e.period_month}/${e.period_year}</td>
-        <td style="font-weight:700;color:${e.global_score >= 80 ? 'var(--green)' : e.global_score >= 50 ? 'var(--orange)' : 'var(--red)'}">${e.global_score}%</td>
         <td>${e.evaluator_name}</td>
         <td>${e.evaluation_date ? new Date(e.evaluation_date).toLocaleDateString('es-MX') : '—'}</td>
-        <td>${e.evidence ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem" onclick="downloadFile('${API}${e.evidence.file_path}','${e.evidence.file_name}')">📥</button>` : '—'}</td>
+        <td>
+          ${e.evidence ? `<button class="btn-ghost" style="padding:4px 8px;font-size:0.8rem" onclick="downloadFile('${API}${e.evidence.file_path}','${e.evidence.file_name}')">📥</button>` : '—'}
+          ${(currentUser.role === 'admin' || currentUser.department === e.department) ? `<button class="btn-ghost" title="Eliminar" style="padding:4px 8px;font-size:0.8rem;margin-left:4px;color:var(--red)" onclick="deleteKPIEval(${e.id})">🗑️</button>` : ''}
+        </td>
       </tr>`).join('')}</tbody>
     </table></div>`}
   `;
@@ -476,19 +537,14 @@ async function loadKPIs() {
 }
 
 async function submitKPI() {
-  const score = document.getElementById('kpi-score').value;
   const file = document.getElementById('kpi-file').files[0];
-  if (!score) return toast('Ingresa el score global', 'error');
   if (!file) return toast('Selecciona un archivo', 'error');
 
   const fd = new FormData();
   fd.append('department', document.getElementById('kpi-dept').value);
-  const collab = document.getElementById('kpi-collab').value.trim();
-  if (collab) fd.append('collaborator_name', collab);
   fd.append('period_month', document.getElementById('kpi-month').value);
   fd.append('period_year', document.getElementById('kpi-year').value);
-  fd.append('global_score', score);
-  fd.append('comments', document.getElementById('kpi-comments').value || '');
+  fd.append('global_score', 0); // Requerido por el backend, pero ya no se pide
   fd.append('file', file);
 
   try {
@@ -497,6 +553,22 @@ async function submitKPI() {
     });
     if (res.ok) { toast('KPIs subidos correctamente', 'success'); loadKPIs(); }
     else { const d = await res.json(); toast(d.detail || 'Error', 'error'); }
+  } catch (e) { toast('Error de red', 'error'); }
+}
+
+async function deleteKPIEval(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta evaluación de KPIs?')) return;
+  try {
+    const res = await fetch(`${API}/api/kpis/evaluation/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok || res.status === 204) {
+      toast('Evaluación eliminada correctamente', 'success');
+      loadKPIs();
+    } else {
+      const d = await res.json(); toast(d.detail || 'Error al eliminar', 'error');
+    }
   } catch (e) { toast('Error de red', 'error'); }
 }
 

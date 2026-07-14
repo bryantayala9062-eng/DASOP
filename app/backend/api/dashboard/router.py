@@ -33,7 +33,7 @@ def get_engine():
             current_mtime = os.path.getmtime(settings.file_path)
             last_mtime = getattr(db, '_loaded_mtime', None)
             if last_mtime is None or current_mtime != last_mtime:
-                print(f"[AUTO-RELOAD] Excel cambió (mtime {last_mtime} → {current_mtime}). Recargando...")
+                print(f"[AUTO-RELOAD] Excel cambió (mtime {last_mtime} -> {current_mtime}). Recargando...")
                 db.reload_data()
                 db._loaded_mtime = current_mtime
     except Exception as _e:

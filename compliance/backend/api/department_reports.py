@@ -161,6 +161,53 @@ def review_report(
     return {"message": "Reporte marcado como revisado"}
 
 
+@router.delete("/{report_id}", status_code=204)
+def delete_report(
+    report_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Elimina un reporte y sus evidencias asociadas. Solo admin."""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden eliminar reportes")
+
+    report = db.query(DepartmentReport).filter(DepartmentReport.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Reporte no encontrado")
+
+    # Eliminar evidencias asociadas (archivos físicos + registros)
+    evidences = db.query(Evidence).filter(Evidence.report_id == report_id).all()
+    for ev in evidences:
+        if ev.file_path and os.path.exists(ev.file_path):
+            try:
+                os.remove(ev.file_path)
+            except Exception:
+                pass
+        db.delete(ev)
+
+    # Audit log
+    forwarded = request.headers.get("x-forwarded-for")
+    ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    audit = DocumentAuditLog(
+        action="delete",
+        user_id=current_user.id,
+        report_id=report.id,
+        file_name=report.title,
+        ip_address=ip,
+        detail=f"Reporte eliminado: {report.title} | Depto: {report.department} | Periodo: {report.period_month}/{report.period_year}"
+    )
+    db.add(audit)
+
+    db.delete(report)
+    db.commit()
+
+    # Trigger backup
+    threading.Thread(target=ejecutar_respaldo_compliance, daemon=True).start()
+
+    logger.info(f"[AUDIT] Report deleted: {report.title} por {current_user.full_name}")
+
+
 DEPARTMENTS = ["Legal", "Administración", "Tesorería", "Contabilidad", "Operaciones", "RH"]
 MONTH_NAMES = [
     "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

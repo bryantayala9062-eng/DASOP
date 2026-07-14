@@ -57,11 +57,11 @@ const Portal = () => {
           </div>
           
           <h2 className="text-2xl font-bold text-white mb-2 relative z-10 group-hover:text-emerald-400 transition-colors">
-            Compliance OP
+            Reporteo OP
           </h2>
           
           <p className="text-slate-400 text-sm leading-relaxed mb-8 flex-1 relative z-10">
-            Módulo de evaluación y seguimiento integral. Monitoreo en tiempo real de KPIs, cumplimiento de tareas internas, gestión de fechas límite y control de riesgos operativos.
+            Módulo de evaluación y seguimiento integral. Monitoreo en tiempo real de KPIs.
           </p>
           
           <div className="flex items-center text-emerald-400 font-medium text-sm relative z-10">

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Plataforma de Cumplimiento Operativo y Normativo de Optimal.">
-<title>Compliance Op — Dashboard Empresarial</title>
+<meta name="description" content="Plataforma de Monitoreo y Reporteo de Optimal.">
+<title>Reporteo OP — Dashboard Empresarial</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
   <div class="login-card">
     <div class="login-logo">
       <div class="logo-icon">🔐</div>
-      <h1>Compliance Op</h1>
-      <p>Plataforma de cumplimiento operativo</p>
+      <h1>Reporteo OP</h1>
+      <p>Monitoreo de KPIs y Reportes</p>
     </div>
     <div class="form-group">
       <label>Usuario</label>
@@ -41,7 +41,7 @@
     <div class="selector-brand">
       <div class="logo-box">🔐</div>
       <div>
-        <span class="brand-name">Compliance Op</span>
+        <span class="brand-name">Reporteo OP</span>
         <small>Optimal</small>
       </div>
     </div>
@@ -75,8 +75,8 @@
     <div class="sidebar-logo">
       <div class="logo-box" id="sb-mod-icon">🔐</div>
       <div>
-        <span id="sb-mod-name">Compliance Op</span>
-        <small id="sb-mod-dept">GRC Platform</small>
+        <span id="sb-mod-name">Reporteo OP</span>
+        <small id="sb-mod-dept">Dashboard Ejecutivo</small>
       </div>
     </div>
     <nav class="sidebar-nav" id="sidebar-nav">
@@ -89,11 +89,14 @@
 
     <div class="sidebar-user">
       <div class="avatar" id="user-avatar">B</div>
-      <div class="sidebar-user-info" onclick="openProfileModal()" style="cursor:pointer" title="Mi Perfil">
+      <div class="sidebar-user-info" onclick="openProfileModal()" style="cursor:pointer; flex: 1;" title="Mi Perfil">
         <div class="name" id="user-name">Bryant</div>
         <div class="role" id="user-role">admin</div>
       </div>
-      <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏏</button>
+      <div style="display:flex; gap: 4px;">
+        <button class="logout-btn" onclick="openProfileModal()" title="Configuración de Cuenta" style="background:transparent; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; padding:4px;">⚙️</button>
+        <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión" style="background:transparent; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; padding:4px;">⏏</button>
+      </div>
     </div>
   </aside>
 
@@ -104,7 +107,7 @@
         <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
         <div>
           <h2 id="page-title">Dashboard</h2>
-          <div class="topbar-sub" id="page-sub">Panel de cumplimiento</div>
+          <div class="topbar-sub" id="page-sub">Módulo de Reportes</div>
         </div>
       </div>
       <div class="topbar-right">
@@ -325,6 +328,6 @@
   </div>
 </div>
 
-<script src="compliance_app.js?v=17"></script>
+<script src="compliance_app.js?v=22"></script>
 </body>
 </html>
