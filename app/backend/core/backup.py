@@ -14,6 +14,34 @@ import threading
 
 _backup_lock = threading.Lock()
 
+import subprocess
+
+def safe_copy(src, dst):
+    """
+    Intenta copiar el archivo normalmente con shutil.
+    Si falla (probablemente porque está bloqueado por Excel), intenta usar PowerShell Copy-Item para forzar la lectura.
+    """
+    try:
+        shutil.copy2(src, dst)
+        return True
+    except Exception as e:
+        logger.warning(f"Error copiando {src} con shutil ({e}). Intentando con PowerShell...")
+        try:
+            # PowerShell Copy-Item -Force puede a veces leer archivos que Python no puede
+            result = subprocess.run(
+                ["powershell", "-Command", f"Copy-Item -Path '{src}' -Destination '{dst}' -Force"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                logger.info(f"Copia exitosa usando PowerShell para {src}")
+                return True
+            else:
+                logger.error(f"Error copiando con PowerShell: {result.stderr}")
+                return False
+        except Exception as p_e:
+            logger.error(f"Fallo catastrófico al copiar {src}: {p_e}")
+            return False
+
 def ejecutar_respaldo():
     """
     Sincroniza las bases de datos y los archivos al directorio de respaldo en el escritorio.
@@ -27,14 +55,21 @@ def ejecutar_respaldo():
         os.makedirs(BACKUP_DIR, exist_ok=True)
         
         # 1. Respaldar SQLite
-        sqlite_src = os.path.join(PROJECT_ROOT, "backend", "portal_erp.db")
-        if os.path.exists(sqlite_src):
-            shutil.copy2(sqlite_src, os.path.join(BACKUP_DIR, "portal_erp.db"))
+        try:
+            sqlite_src = os.path.join(PROJECT_ROOT, "backend", "portal_erp.db")
+            if os.path.exists(sqlite_src):
+                safe_copy(sqlite_src, os.path.join(BACKUP_DIR, "portal_erp.db"))
+        except Exception as e:
+            logger.error(f"Error al respaldar SQLite: {e}")
             
         # 2. Respaldar Excel madre
-        excel_src = os.path.join(PROJECT_ROOT, "Bases_de_Datos", "dashboard_xml", "BaseDatosFACTURASoptimal.xlsx")
-        if os.path.exists(excel_src):
-            shutil.copy2(excel_src, os.path.join(BACKUP_DIR, "BaseDatosFACTURASoptimal.xlsx"))
+        try:
+            excel_src = os.path.join(PROJECT_ROOT, "Bases_de_Datos", "dashboard_xml", "BaseDatosFACTURASoptimal.xlsx")
+            if os.path.exists(excel_src):
+                if not safe_copy(excel_src, os.path.join(BACKUP_DIR, "BaseDatosFACTURASoptimal.xlsx")):
+                    logger.warning(f"ADVERTENCIA: No se pudo respaldar el Excel madre. Es posible que esté abierto y bloqueado de forma exclusiva.")
+        except Exception as e:
+            logger.error(f"Error al respaldar Excel madre: {e}")
             
         import sqlite3
         import re
@@ -51,14 +86,12 @@ def ejecutar_respaldo():
             words = [w for w in re.split(r'[\s\.\,]+', name) if w]
             return "_".join(words[:max_words]).upper()
 
-        # Connect to SQLite to get mapping
         db_path = os.path.join(PROJECT_ROOT, "backend", "portal_erp.db")
         if os.path.exists(db_path):
+            # 3. Respaldar Materialidad organizadamente
             try:
                 conn = sqlite3.connect(db_path)
                 c = conn.cursor()
-
-                # 3. Respaldar Materialidad organizadamente
                 c.execute('''
                     SELECT d.ruta_fisica, d.tipo_documento, e.razon_social 
                     FROM documentos_materialidad d 
@@ -86,14 +119,19 @@ def ejecutar_respaldo():
                         emp_abbr = abbreviate_name(empresa)
                         
                         if "CONTRATO" in tipo_doc.upper():
-                            # Contratos from materialidad don't have a client
                             new_filename = f"CONTRATO_{emp_abbr}{ext}"
                         else:
                             new_filename = f"{tipo_clean}_{emp_abbr}{ext}"
                             
-                        shutil.copy2(src_path, os.path.join(dest_folder, new_filename))
+                        safe_copy(src_path, os.path.join(dest_folder, new_filename))
+                conn.close()
+            except Exception as e:
+                logger.error(f"Error al respaldar materialidad: {e}")
 
-                # 4. Respaldar Contratos organizadamente (Legal)
+            # 4. Respaldar Contratos organizadamente (Legal)
+            try:
+                conn = sqlite3.connect(db_path)
+                c = conn.cursor()
                 c.execute('''
                     SELECT c.archivo_path, e.razon_social, c.cliente
                     FROM contratos c 
@@ -121,12 +159,13 @@ def ejecutar_respaldo():
                         
                         new_filename = f"CONTRATO_{emp_abbr}_{cli_abbr}{ext}"
                         
-                        shutil.copy2(src_path, os.path.join(dest_folder, new_filename))
-
+                        safe_copy(src_path, os.path.join(dest_folder, new_filename))
                 conn.close()
+            except Exception as e:
+                logger.error(f"Error al respaldar Contratos (Legal): {e}")
 
-                # 5. Respaldar Expedientes CAFI
-                # Reconectar usando SQLAlchemy porque ContratoCafi puede ser más fácil, o usar sqlite3 raw
+            # 5. Respaldar Expedientes CAFI
+            try:
                 conn = sqlite3.connect(db_path)
                 c = conn.cursor()
                 c.execute('''
@@ -142,7 +181,6 @@ def ejecutar_respaldo():
                     
                     dest_folder = os.path.join(BACKUP_DIR, empresa_clean, "CAFI")
                     
-                    # Rutas y prefijos
                     archivos = [
                         (r_fisica, "CONTRATO_CAFI"),
                         (r_notificacion, "NOTIFICACION_CAFI"),
@@ -157,16 +195,16 @@ def ejecutar_respaldo():
                             os.makedirs(dest_folder, exist_ok=True)
                             ext = os.path.splitext(src_path)[1] or ".pdf"
                             new_filename = f"{prefijo}_{emp_abbr}_{cli_abbr}{ext}"
-                            shutil.copy2(src_path, os.path.join(dest_folder, new_filename))
-
+                            safe_copy(src_path, os.path.join(dest_folder, new_filename))
                 conn.close()
             except Exception as e:
-                logger.error(f"Error reading DB for organized backup: {e}")
+                logger.error(f"Error al respaldar CAFI: {e}")
         else:
-            logger.warning("No se encontró la base de datos para organizar el respaldo.")
+            logger.warning("No se encontró la base de datos para organizar el respaldo (Materialidad, Contratos, CAFI).")
             
         logger.info(f"Respaldo completado exitosamente en: {BACKUP_DIR}")
     except Exception as e:
-        logger.error(f"Error al ejecutar respaldo automático: {e}")
+        logger.error(f"Error general al ejecutar respaldo automático: {e}")
     finally:
         _backup_lock.release()
+

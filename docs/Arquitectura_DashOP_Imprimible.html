@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual Arquitectónico - Optimal DashOP</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  h1 {
+    color: #1a365d;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 10px;
+  }
+  h2 {
+    color: #2563eb;
+    margin-top: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 5px;
+  }
+  h3 {
+    color: #475569;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 12px;
+    text-align: left;
+  }
+  th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+  }
+  .mermaid-box {
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    padding: 15px;
+    text-align: center;
+    font-family: monospace;
+    white-space: pre;
+    font-size: 0.9em;
+  }
+  hr {
+    border: 0;
+    height: 1px;
+    background: #e2e8f0;
+    margin: 2rem 0;
+  }
+  @media print {
+    body { padding: 0; max-width: 100%; }
+    table, tr, td, th { page-break-inside: avoid; }
+    h2, h3 { page-break-after: avoid; }
+    @page { margin: 2cm; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Ecosistema Optimal: DashOP & Reporteo OP</h1>
+<p><strong>Manual Arquitectónico y Funcional</strong></p>
+
+<p>Este documento describe la arquitectura, flujo de trabajo y stack tecnológico del ecosistema de software de Optimal, diseñado para abarcar desde la operación administrativa y fiscal (DashOP) hasta la inteligencia de negocios y el cumplimiento de KPIs directivos (Reporteo OP).</p>
+
+<hr>
+
+<h2>1. Visión Directiva (¿Cómo funciona el negocio aquí?)</h2>
+
+<p>El ecosistema está dividido en dos grandes "hemisferios" que operan de forma independiente pero complementaria:</p>
+
+<ol>
+  <li><strong>DashOP (Operaciones y Facturación):</strong> Es el motor de "trinchera". Aquí se conectan los sistemas contables (Contpaq), correos electrónicos (Gmail) y archivos XML del SAT. Su objetivo principal es asegurar la <strong>Materialidad Fiscal</strong>, detectar facturas canceladas automáticamente y mantener un padrón de empresas limpio.</li>
+  <li><strong>Reporteo OP (Tablero Ejecutivo y Cumplimiento):</strong> Es el motor "analítico". Las gerencias (Contabilidad, RH, Legal, Tesorería, Operaciones, Administración) suben mes a mes sus formatos de evaluación (KPIs). El sistema ingiere estos datos, los califica y alimenta un <strong>Dashboard Ejecutivo</strong> para que la Dirección (COO/CEO) vea de un vistazo la salud global de la empresa.</li>
+</ol>
+
+<h3>El Flujo de Información Ejecutivo</h3>
+<div class="mermaid-box">
+[Gerentes de Área] 
+       ↓ (Suben reportes Excel/JPG)
+[API de Parseo Reporteo OP]
+       ↓ (Extrae Calificaciones y KPIs)
+[Base de Datos SQLite]
+       ↓ (Calcula Promedios Globales)
+[Dashboard Ejecutivo]
+       ↓ (Visualiza Ranking y Tendencias)
+(Dirección / COO)
+</div>
+
+<hr>
+
+<h2>2. Arquitectura Técnica y Stack</h2>
+
+<p>El sistema está construido buscando ligereza, velocidad de despliegue y nula dependencia de servidores costosos, utilizando bases de datos locales (SQLite) y túneles seguros para acceso remoto.</p>
+
+<h3>2.1 Stack Tecnológico</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Capa</th>
+      <th>Reporteo OP (Dashboard/KPIs)</th>
+      <th>DashOP (ERP/Fiscal)</th>
+      <th>Propósito</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Frontend (UI)</strong></td>
+      <td>HTML5, CSS3, Vanilla JavaScript, Chart.js</td>
+      <td>HTML5, CSS3, Vanilla JS</td>
+      <td>Ligeros, sin frameworks pesados, carga instantánea.</td>
+    </tr>
+    <tr>
+      <td><strong>Backend (API)</strong></td>
+      <td>Python (FastAPI), Uvicorn</td>
+      <td>Python (FastAPI), Uvicorn</td>
+      <td>APIs REST ultrarrápidas y asíncronas.</td>
+    </tr>
+    <tr>
+      <td><strong>Base de Datos</strong></td>
+      <td>SQLite (<code>complianceop.db</code>)</td>
+      <td>SQLite (<code>portal_erp.db</code>)</td>
+      <td>Almacenamiento transaccional embebido.</td>
+    </tr>
+    <tr>
+      <td><strong>ORM / Datos</strong></td>
+      <td>SQLAlchemy, Pandas, OpenPyXL</td>
+      <td>Pandas, xml.etree</td>
+      <td>Manejo de modelos, lectura de Excels y parseo de XMLs.</td>
+    </tr>
+    <tr>
+      <td><strong>Autenticación</strong></td>
+      <td>JWT (JSON Web Tokens), bcrypt</td>
+      <td>Autenticación básica</td>
+      <td>Seguridad sin estado para sesiones.</td>
+    </tr>
+    <tr>
+      <td><strong>Infraestructura</strong></td>
+      <td>Cloudflare Tunnels (cloudflared)</td>
+      <td>Cloudflare Tunnels</td>
+      <td>Exposición segura a internet sin abrir puertos del router.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>3. Módulo A: DashOP (Operaciones Fiscales)</h2>
+
+<p>Ubicado en la carpeta raíz <code>app/</code>. Este módulo automatiza la revisión fiscal.</p>
+
+<h3>Procesos Clave</h3>
+<ul>
+  <li><strong>Sincronización de Emisoras (<code>sincronizar_emisoras.py</code>):</strong> Mantiene actualizado el catálogo de empresas contra un Excel maestro.</li>
+  <li><strong>Detección de Canceladas (<code>detectar_canceladascontpaq.py</code>):</strong> Revisa masivamente directorios de facturas XML y detecta cuáles han sido canceladas en el sistema contable, cruzando información con archivos maestros para evitar discrepancias.</li>
+  <li><strong>Auditoría de Gmail (<code>buscar_gmail.py</code>):</strong> Automatización para extraer comprobantes y notificaciones directo desde bandejas de correo.</li>
+</ul>
+
+<hr>
+
+<h2>4. Módulo B: Reporteo OP (Inteligencia Directiva)</h2>
+
+<p>Ubicado en la carpeta <code>compliance/</code>. Es el portal de inteligencia de negocios.</p>
+
+<h3>4.1 Motor de Parseo de KPIs</h3>
+<p>El corazón del módulo. Cuando un gerente sube su evaluación mensual en Excel:</p>
+<ol>
+  <li>El backend (<code>api/kpis.py</code>) recibe el archivo <code>.xlsx</code>.</li>
+  <li>Utiliza <code>OpenPyXL</code> para leer celdas específicas basadas en palabras clave (ej. "calificación", "global", "total").</li>
+  <li>Registra el <code>global_score</code> y desgrana línea por línea (sub-evaluaciones) en la base de datos (<code>kpi_evaluations</code> y <code>kpi_evaluation_details</code>).</li>
+  <li><em>Limitación conocida:</em> Si un área (ej. Administración) sube imágenes (<code>.jpg</code>) en lugar de Excel, el motor no puede leerlas y asignará un score de <code>0%</code> por defecto.</li>
+</ol>
+
+<h3>4.2 Dashboard Ejecutivo (<code>compliance_app.js</code>)</h3>
+<p>Diseñado para la toma de decisiones rápidas (Visión COO).</p>
+<ul>
+  <li><strong>Score Global:</strong> Promedio dinámico de todos los departamentos reportados en el mes activo vs mes anterior.</li>
+  <li><strong>Ranking de Desempeño:</strong> Gráfica de barras horizontales (Chart.js) que ordena a los gerentes de mayor a menor cumplimiento.</li>
+  <li><strong>Evolución Histórica:</strong> Gráfica de líneas que compara la trayectoria de cada departamento contra el <strong>Promedio Global</strong> de la empresa (Línea de flotación).</li>
+</ul>
+
+<h3>4.3 Control de Accesos (RBAC)</h3>
+<ul>
+  <li><strong>Rol <code>admin</code></strong>: Acceso total, puede ver el Dashboard Ejecutivo y forzar revisiones.</li>
+  <li><strong>Rol <code>manager</code> / <code>user</code></strong>: Acceso aislado (Silo de datos). El gerente de Contabilidad solo puede ver y subir métricas de Contabilidad.</li>
+</ul>
+
+<hr>
+
+<h2>5. Infraestructura y Operaciones IT</h2>
+
+<p>El ecosistema corre de manera local (On-Premise) en la computadora/servidor principal, orquestado mediante scripts Batch (<code>.bat</code>) para facilitar su uso a operadores no técnicos.</p>
+
+<h3>5.1 Scripts de Inicialización</h3>
+<ul>
+  <li><code>INICIAR_ERP.bat</code> / <code>INICIAR_TUNEL.bat</code>: Levantan los servidores Uvicorn de Python y abren la conexión a Cloudflare para dar salida a internet con URLs públicas HTTPS.</li>
+  <li><code>CERRAR_TODO.bat</code>: Mata los procesos de Python de forma segura para reiniciar el sistema.</li>
+  <li><code>AUTO_INICIO_ERP.bat</code>: Configurado en el Task Scheduler de Windows para asegurar que el sistema se levante si la PC se reinicia.</li>
+</ul>
+
+<h3>5.2 Política de Respaldos</h3>
+<ul>
+  <li>Se prioriza un esquema de compresión ZIP.</li>
+  <li>El servidor acumula Gigabytes de datos principalmente por el histórico de la carpeta <code>XML_Respaldos</code>.</li>
+  <li>Los scripts como <code>scripts/check_backups.py</code> auditan que las carpetas de respaldo estén recibiendo datos.</li>
+  <li><strong>Respaldo Limpio:</strong> Regularmente se comprime únicamente el código fuente, y los archivos <code>.db</code> (<code>complianceop.db</code>, <code>portal_erp.db</code>) omitiendo dependencias (<code>venv</code>, <code>node_modules</code>) para conservar almacenamiento.</li>
+</ul>
+
+<hr>
+<p style="text-align:center; color:#94a3b8; font-size:0.85em;"><em>Documento generado por el motor de IA de Reporteo OP.</em></p>
+
+</body>
+</html>

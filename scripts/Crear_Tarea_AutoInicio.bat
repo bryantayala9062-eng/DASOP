@@ -10,8 +10,8 @@ echo Script: %SCRIPT_PATH%
 :: Eliminar si ya existe
 schtasks /Delete /TN "%TASK_NAME%" /F >nul 2>&1
 
-:: Crear tarea al iniciar Windows
-schtasks /Create /TN "%TASK_NAME%" /SC ONSTART /RL HIGHEST /RU "SYSTEM" /F /TR "cmd /c \"%SCRIPT_PATH%\""
+:: Crear tarea al iniciar sesión
+schtasks /Create /TN "%TASK_NAME%" /SC ONLOGON /RL HIGHEST /F /TR "cmd /c \"%SCRIPT_PATH%\""
 
 if %ERRORLEVEL% NEQ 0 (
   echo ERROR: No se pudo crear la tarea. Ejecuta este .bat como Administrador.

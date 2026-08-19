@@ -59,6 +59,7 @@ const LegalDashboard = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [pdfFilter, setPdfFilter] = useState<'ALL' | 'CON_PDF' | 'SIN_PDF'>('ALL');
+  const [alertFilter, setAlertFilter] = useState(false);
 
   // Modals
   const [detailsModal, setDetailsModal] = useState<Contrato | null>(null);
@@ -225,6 +226,9 @@ const LegalDashboard = () => {
     } else if (pdfFilter === 'SIN_PDF') {
       result = result.filter(c => !c.tiene_pdf);
     }
+    if (alertFilter) {
+      result = result.filter(c => c.alerta?.includes('WARN'));
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(c =>
@@ -236,7 +240,7 @@ const LegalDashboard = () => {
       );
     }
     return result;
-  }, [contracts, search, statusFilter, pdfFilter]);
+  }, [contracts, search, statusFilter, pdfFilter, alertFilter]);
 
   const groupedContracts = useMemo(() => {
     const groups: Record<string, Contrato[]> = {};
@@ -264,7 +268,7 @@ const LegalDashboard = () => {
 
   const kpis = [
     { label: 'Total Contratos', value: total, icon: '📁', bg: 'bg-slate-600/10', border: 'border-slate-500/20' },
-    { label: 'Alertas', value: alertas, icon: '⚠️', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+    { label: 'Alertas', value: alertas, icon: '⚠️', bg: alertFilter ? 'bg-rose-500/20' : 'bg-rose-500/10', border: alertFilter ? 'border-rose-500/50' : 'border-rose-500/20', isAlertFilter: true },
     { label: 'En Proceso', value: activos, icon: '⚡', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
     { label: 'Con PDF', value: conPdf, icon: '📄', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', clickFilter: 'CON_PDF' as const },
     { label: 'Sin PDF', value: sinPdf, icon: '📭', bg: 'bg-orange-500/10', border: 'border-orange-500/20', clickFilter: 'SIN_PDF' as const },
@@ -373,26 +377,36 @@ const LegalDashboard = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {kpis.map(kpi => (
-          <div
-            key={kpi.label}
-            onClick={() => (kpi as any).clickFilter ? setPdfFilter(pdfFilter === (kpi as any).clickFilter ? 'ALL' : (kpi as any).clickFilter) : null}
-            className={`${kpi.bg} border ${kpi.border} rounded-xl p-5 flex items-center gap-4 transition-all hover:scale-[1.02] ${
-              (kpi as any).clickFilter ? 'cursor-pointer' : ''
-            } ${
-              pdfFilter === (kpi as any).clickFilter ? 'ring-2 ring-offset-1 ring-offset-slate-900 ring-current' : ''
-            }`}
-          >
-            <span className="text-2xl">{kpi.icon}</span>
-            <div>
-              <div className="text-2xl font-bold text-white">{kpi.value}</div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">{kpi.label}</div>
+        {kpis.map(kpi => {
+          const isClickable = !!(kpi as any).clickFilter || !!(kpi as any).isAlertFilter;
+          const isActive = (kpi as any).clickFilter ? pdfFilter === (kpi as any).clickFilter : (kpi as any).isAlertFilter ? alertFilter : false;
+          return (
+            <div
+              key={kpi.label}
+              onClick={() => {
+                if ((kpi as any).clickFilter) {
+                  setPdfFilter(pdfFilter === (kpi as any).clickFilter ? 'ALL' : (kpi as any).clickFilter);
+                } else if ((kpi as any).isAlertFilter) {
+                  setAlertFilter(!alertFilter);
+                }
+              }}
+              className={`${kpi.bg} border ${kpi.border} rounded-xl p-5 flex items-center gap-4 transition-all hover:scale-[1.02] ${
+                isClickable ? 'cursor-pointer' : ''
+              } ${
+                isActive ? 'ring-2 ring-offset-1 ring-offset-slate-900 ring-rose-500' : ''
+              }`}
+            >
+              <span className="text-2xl">{kpi.icon}</span>
+              <div>
+                <div className="text-2xl font-bold text-white">{kpi.value}</div>
+                <div className="text-xs text-slate-400 uppercase tracking-wider">{kpi.label}</div>
+              </div>
+              {isActive && (
+                <span className="ml-auto text-xs text-white/60 bg-white/10 rounded-full px-2 py-0.5">activo</span>
+              )}
             </div>
-            {(kpi as any).clickFilter && pdfFilter === (kpi as any).clickFilter && (
-              <span className="ml-auto text-xs text-white/60 bg-white/10 rounded-full px-2 py-0.5">activo</span>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Toolbar */}

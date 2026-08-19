@@ -36,8 +36,10 @@ start "ERP_Frontend" cmd /k "pushd app\frontend && npm run dev"
 :: Esperar a que levante el frontend
 timeout /t 4 /nobreak >nul
 
-echo Abriendo Portal ERP en el navegador...
-start "" "http://localhost:5190"
+if not /i "%AUTO_START%"=="1" (
+    echo Abriendo Portal ERP en el navegador...
+    start "" "http://localhost:5190"
+)
 
 echo.
 echo ==================================================

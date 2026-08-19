@@ -20,6 +20,6 @@ if not exist "tools\cloudflared-windows-amd64.exe" (
 )
 
 :: Ejecuta el túnel usando el archivo de configuración global (config.yml)
-"%CLOUDFLARED_EXE%" tunnel --config "%USERPROFILE%\.cloudflared\config.yml" run portal-dashop-prod
+"%CLOUDFLARED_EXE%" tunnel --config "C:\Users\Administrador\.cloudflared\config.yml" run portal-dashop-prod
 
 pause

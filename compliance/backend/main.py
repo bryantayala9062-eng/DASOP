@@ -28,6 +28,7 @@ from api.dashboard import router as dashboard_router
 from api.evidences import router as evidences_router
 from api.department_reports import router as department_reports_router
 from api.kpis import router as kpis_router
+from api.signatures import router as signatures_router
 
 from core.database import engine, SessionLocal, Base
 
@@ -77,6 +78,7 @@ app.include_router(dashboard_router)
 app.include_router(evidences_router)
 app.include_router(department_reports_router)
 app.include_router(kpis_router)
+app.include_router(signatures_router)
 
 
 # --- Servir frontend construido (dist) ---

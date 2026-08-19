@@ -56,6 +56,8 @@ def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: m
     existing = db.query(models.User).filter(models.User.username == data.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="El nombre de usuario ya está registrado")
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
 
     user = models.User(
         full_name=data.full_name,
@@ -81,6 +83,8 @@ def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db), c
         
     update_data = data.dict(exclude_unset=True)
     if "password" in update_data and update_data["password"]:
+        if len(update_data["password"]) < 6:
+            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
         update_data["password_hash"] = get_password_hash(update_data.pop("password"))
     elif "password" in update_data:
         del update_data["password"]
@@ -115,6 +119,8 @@ def update_my_profile(data: UserUpdate, db: Session = Depends(get_db), current_u
         del update_data["status"]
         
     if "password" in update_data and update_data["password"]:
+        if len(update_data["password"]) < 6:
+            raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
         update_data["password_hash"] = get_password_hash(update_data.pop("password"))
     elif "password" in update_data:
         del update_data["password"]

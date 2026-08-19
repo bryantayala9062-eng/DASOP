@@ -1,0 +1,11 @@
+# Archivos generados
+complianceop.db
+__pycache__/
+*.pyc
+.env
+uploads/
+venv/
+backend/venv/
+*.log
+debug_env.txt
+.DS_Store

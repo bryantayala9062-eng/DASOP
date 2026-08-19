@@ -182,8 +182,8 @@ def delete_report(
         if ev.file_path and os.path.exists(ev.file_path):
             try:
                 os.remove(ev.file_path)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar el archivo de evidencia ({ev.file_path}): {e}")
         db.delete(ev)
 
     # Audit log

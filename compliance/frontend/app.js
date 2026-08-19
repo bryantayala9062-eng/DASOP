@@ -96,6 +96,12 @@ async function showModuleSelector() {
   const data = await api('/api/auth/modules');
   if (!data || !data.modules) { grid.innerHTML = '<div class="empty-state">No se pudieron cargar los módulos.</div>'; return; }
 
+  // Auto-route para el Jefe
+  if (currentUser.username && currentUser.username.toLowerCase() === 'carlos') {
+    enterModule('general', 'Vista General', '📊', '#7b61ff');
+    return;
+  }
+
   if (data.modules.length === 1 && currentUser.role !== 'admin') {
     const m = data.modules[0]; enterModule(m.id, m.name, m.icon, m.color); return;
   }

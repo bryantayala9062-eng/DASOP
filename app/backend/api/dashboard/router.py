@@ -390,7 +390,7 @@ def get_complementos(
 @router.get("/invoices")
 def get_invoices(
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=10, le=500),
+    limit: int = Query(50, ge=10, le=100000),
     empresa: Optional[str] = Query(None),
     cliente: Optional[str] = Query(None),
     concepto: Optional[str] = Query(None),

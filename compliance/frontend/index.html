@@ -234,6 +234,28 @@
   </div>
 </div>
 
+<!-- MODAL KPI CHART -->
+<div class="modal-overlay" id="modal-kpi-chart" onclick="if(event.target===this) closeModal('modal-kpi-chart')">
+  <div class="modal-content" style="max-width: 700px; width: 90%;">
+    <div class="modal-header">
+      <h3 id="kpi-chart-title">Detalles de KPIs</h3>
+      <button class="modal-close" onclick="closeModal('modal-kpi-chart')">&times;</button>
+    </div>
+    <div class="modal-body" id="kpi-chart-content" style="max-height: 70vh; overflow-y: auto;">
+      <canvas id="kpiChartCanvas" style="max-height: 300px; margin-bottom: 20px;"></canvas>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>KPI</th><th>Ponderación</th><th>Cumplimiento</th><th>Estado</th></tr></thead>
+          <tbody id="kpi-chart-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-kpi-chart')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL USUARIO -->
 <div class="modal-overlay" id="modal-user" onclick="if(event.target===this) closeModal('modal-user')">
   <div class="modal-card" onclick="event.stopPropagation()">
@@ -328,6 +350,6 @@
   </div>
 </div>
 
-<script src="compliance_app.js?v=22"></script>
+<script src="compliance_app.js?v=37"></script>
 </body>
 </html>

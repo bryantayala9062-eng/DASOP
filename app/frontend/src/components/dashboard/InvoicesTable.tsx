@@ -183,6 +183,7 @@ const InvoicesTable = ({ filters }: Props) => {
     const [localConcepto, setLocalConcepto] = useState('');
     const [localFolio, setLocalFolio] = useState('');
     const [localLens, setLocalLens] = useState('');
+    const [localYear, setLocalYear] = useState('');
     const [empresaOptions, setEmpresaOptions] = useState<string[]>([]);
     const [clienteOptions, setClienteOptions] = useState<string[]>([]);
     const [conceptoOptions, setConceptoOptions] = useState<string[]>([]);
@@ -275,6 +276,7 @@ const InvoicesTable = ({ filters }: Props) => {
         setLocalConcepto('');
         setLocalFolio('');
         setLocalLens('');
+        setLocalYear('');
         setSelectedStatuses(new Set());
     };
 
@@ -309,7 +311,10 @@ const InvoicesTable = ({ filters }: Props) => {
             if (localConcepto) params.append('concepto', localConcepto);
             if (activeFolio) params.append('folio', activeFolio);
             if (activeLens) params.append('lens', activeLens);
-            if (filters.years && filters.years.length > 0 && !filters.startDate) {
+            
+            if (localYear) {
+                params.append('startDate', `years:${localYear}`);
+            } else if (filters.years && filters.years.length > 0 && !filters.startDate) {
                 params.append('startDate', `years:${filters.years.join(',')}`);
             } else if (filters.startDate) {
                 params.append('startDate', filters.startDate);
@@ -347,7 +352,7 @@ const InvoicesTable = ({ filters }: Props) => {
     }, [page, limit, sortDir, filters, localEmpresa, localCliente, localConcepto, localFolio, localLens, selectedStatuses]);
 
     // Resetear a pag 1 si cambian filtros (no depender del Set directamente)
-    const filterFingerprint = [localEmpresa, localCliente, localConcepto, localFolio, localLens, Array.from(selectedStatuses).join(','), sortDir, JSON.stringify(filters)].join('|');
+    const filterFingerprint = [localEmpresa, localCliente, localConcepto, localFolio, localLens, localYear, Array.from(selectedStatuses).join(','), sortDir, JSON.stringify(filters)].join('|');
     useEffect(() => {
         setPage(1);
     }, [filterFingerprint]);
@@ -396,13 +401,57 @@ const InvoicesTable = ({ filters }: Props) => {
                         >
                             <Filter size={18} />
                         </button>
-                        <ExportButton data={data} filename="Reporte_Facturas" label="Exportar" className="bg-slate-700 hover:bg-slate-600 border border-slate-600" />
+                        <ExportButton 
+                            data={[]} // handled by onExport
+                            onExport={async () => {
+                                const params = new URLSearchParams({
+                                    page: '1',
+                                    limit: '100000',
+                                    sortDir
+                                });
+                                const activeEmpresa = localEmpresa || filters.empresa;
+                                const activeCliente = localCliente || filters.cliente;
+                                const activeFolio = localFolio || filters.folio;
+                                const activeLens = localLens || filters.lens;
+
+                                if (activeEmpresa) params.append('empresa', activeEmpresa);
+                                if (activeCliente) params.append('cliente', activeCliente);
+                                if (localConcepto) params.append('concepto', localConcepto);
+                                if (activeFolio) params.append('folio', activeFolio);
+                                if (activeLens) params.append('lens', activeLens);
+                                
+                                if (localYear) {
+                                    params.append('startDate', `years:${localYear}`);
+                                } else if (filters.years && filters.years.length > 0 && !filters.startDate) {
+                                    params.append('startDate', `years:${filters.years.join(',')}`);
+                                } else if (filters.startDate) {
+                                    params.append('startDate', filters.startDate);
+                                }
+                                if (filters.endDate) params.append('endDate', filters.endDate);
+
+                                if (selectedStatuses.size > 0) {
+                                    params.append('status', Array.from(selectedStatuses).join(','));
+                                } else if (filters.status && filters.status !== 'ALL') {
+                                    params.append('status', filters.status);
+                                }
+
+                                const res = await api.get(`/api/dashboard/invoices?${params.toString()}`);
+                                const fullData = res.data?.data || [];
+                                return fullData.map((row: any) => ({
+                                    ...row,
+                                    FECHA: row.FECHA ? row.FECHA.split(' ')[0] : row.FECHA
+                                }));
+                            }}
+                            filename="Reporte_Facturas" 
+                            label="Exportar" 
+                            className="bg-slate-700 hover:bg-slate-600 border border-slate-600" 
+                        />
                     </div>
                 </div>
 
                 {/* Filters Panel */}
                 {isExpanded && showFilters && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 p-4 bg-slate-900/50 rounded-lg border border-slate-700 animate-in slide-in-from-top-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 p-4 bg-slate-900/50 rounded-lg border border-slate-700 animate-in slide-in-from-top-2">
 
                         {/* Empresa */}
                         <div>
@@ -509,6 +558,21 @@ const InvoicesTable = ({ filters }: Props) => {
                                     <option value="">Todos los registros</option>
                                     <option value="debt">Deuda (PPD sin REP)</option>
                                     <option value="intangibles">Servicios Intangibles</option>
+                                </select>
+                                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        {/* Año */}
+                        <div>
+                            <label className="text-xs text-slate-500 block mb-1">Año</label>
+                            <div className="relative">
+                                <select value={localYear} onChange={e => setLocalYear(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:border-slate-500 focus:outline-none appearance-none">
+                                    <option value="">Todos los años</option>
+                                    {Array.from({length: 10}, (_, i) => new Date().getFullYear() + 2 - i).map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
                                 </select>
                                 <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                             </div>

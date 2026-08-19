@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Plataforma de Monitoreo y Reporteo de Optimal.">
+<title>Reporteo OP — Dashboard Empresarial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=5.4">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🔐</div>
+      <h1>Reporteo OP</h1>
+      <p>Monitoreo de KPIs y Reportes</p>
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input id="login-username" type="text" placeholder="usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Iniciar sesión</button>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- ── SELECTOR DE MÓDULOS ────────────────────────────────────────────────── -->
+<div id="module-selector" style="display:none;">
+  <div class="selector-header">
+    <div class="selector-brand">
+      <div class="logo-box">🔐</div>
+      <div>
+        <span class="brand-name">Reporteo OP</span>
+        <small>Optimal</small>
+      </div>
+    </div>
+
+    <div class="selector-user">
+      <div class="avatar" id="sel-avatar">B</div>
+      <div class="selector-user-info">
+        <div class="sel-name" id="sel-name">Bryant</div>
+        <div class="sel-role" id="sel-role">Administrador</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏏</button>
+    </div>
+  </div>
+
+  <div class="selector-body">
+    <div class="selector-title">
+      <h2>Selecciona un módulo</h2>
+      <p>Accede al área de trabajo de tu departamento</p>
+    </div>
+    <div class="modules-grid" id="modules-grid">
+      <div class="loading-state"><span class="spinner"></span> Cargando módulos...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP (WORKSPACE) ────────────────────────────────────────────────────── -->
+<div id="app" style="display:none;">
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="main-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-box" id="sb-mod-icon">🔐</div>
+      <div>
+        <span id="sb-mod-name">Reporteo OP</span>
+        <small id="sb-mod-dept">Dashboard Ejecutivo</small>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Construido dinámicamente por buildSidebarForModule() en app.js -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="back-to-modules" onclick="exitModule()">← Módulos</button>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="avatar" id="user-avatar">B</div>
+      <div class="sidebar-user-info" onclick="openProfileModal()" style="cursor:pointer; flex: 1;" title="Mi Perfil">
+        <div class="name" id="user-name">Bryant</div>
+        <div class="role" id="user-role">admin</div>
+      </div>
+      <div style="display:flex; gap: 4px;">
+        <button class="logout-btn" onclick="openProfileModal()" title="Configuración de Cuenta" style="background:transparent; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; padding:4px;">⚙️</button>
+        <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión" style="background:transparent; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; padding:4px;">⏏</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <h2 id="page-title">Dashboard</h2>
+          <div class="topbar-sub" id="page-sub">Módulo de Reportes</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-btn" onclick="showPage('alerts')">
+          🔔 <span class="notif-dot" id="notif-dot"></span>
+        </button>
+        <div class="avatar" id="top-avatar">B</div>
+      </div>
+    </div>
+    <div class="page-content" id="page-content">
+      <div class="loading-state"><span class="spinner"></span> Cargando...</div>
+    </div>
+    <!-- ── PAGE REPORTES DE ÁREA ───────────────────────────────────────────── -->
+    <div class="page-content" id="page-reports" style="display:none;">
+      <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2><span class="icon">📁</span> Reportes de Área</h2>
+          <p class="subtitle">Directorio central de reportes ejecutivos mensuales</p>
+        </div>
+        <button class="btn-primary" id="btn-upload-report" onclick="openReportModal()">Subir Reporte</button>
+      </div>
+      <div class="card" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Departamento</th>
+              <th>Título</th>
+              <th>Periodo</th>
+              <th>Subido Por</th>
+              <th>Fecha</th>
+              <th>Estatus</th>
+              <th width="100">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="reports-list">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ── PAGE EVALUACIÓN DE KPIS ─────────────────────────────────────────── -->
+    <div class="page-content" id="page-kpis" style="display:none;">
+      <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2><span class="icon">📊</span> Evaluación Mensual de KPIs</h2>
+          <p class="subtitle">Ingresa los resultados operativos del mes</p>
+        </div>
+      </div>
+      <div id="kpis-container">
+        <!-- Relleno dinámico -->
+      </div>
+    </div>
+<div id="toast-container"></div>
+
+
+
+<!-- ── MODAL REPORTE ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-report" onclick="closeModal('modal-report')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Subir Reporte de Área</h3>
+      <button class="modal-close" onclick="closeModal('modal-report')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Título del reporte *</label>
+          <input class="form-control" id="rep-title" type="text" placeholder="Ej: Reporte actividades">
+        </div>
+        <div class="form-group">
+          <label>Departamento *</label>
+          <select class="form-control" id="rep-dept">
+            <option value="Legal">Legal</option>
+            <option value="Operaciones">Operaciones</option>
+
+            <option value="Tesorería">Tesorería</option>
+            <option value="RH">Recursos Humanos</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Mes *</label>
+          <input class="form-control" id="rep-month" type="number" min="1" max="12" value="1">
+        </div>
+        <div class="form-group">
+          <label>Año *</label>
+          <input class="form-control" id="rep-year" type="number" min="2020" max="2100" value="2024">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Comentarios / Resumen</label>
+        <textarea class="form-control" id="rep-desc" rows="2" placeholder="Notas sobre el reporte..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Archivo (PDF, Excel, Word) *</label>
+        <div class="file-drop-area" id="rep-drop-area" onclick="document.getElementById('rep-file').click()">
+          <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+          <span id="rep-file-name">Haz clic o arrastra tu archivo aquí</span>
+          <input type="file" id="rep-file" style="display:none" accept=".pdf,.xls,.xlsx,.doc,.docx" onchange="document.getElementById('rep-file-name').textContent = this.files[0] ? this.files[0].name : 'Haz clic o arrastra tu archivo aquí'">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-report')">Cancelar</button>
+      <button class="btn-primary" style="width:auto" onclick="submitReport()">Subir Reporte</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PERIOD DETAILS -->
+<div class="modal-overlay" id="modal-period-details" onclick="if(event.target===this) closeModal('modal-period-details')">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 id="period-details-title">Detalles del Periodo</h3>
+      <button class="modal-close" onclick="closeModal('modal-period-details')">&times;</button>
+    </div>
+    <div class="modal-body" id="period-details-content">
+      <!-- Content populated via JS -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-period-details')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KPI CHART -->
+<div class="modal-overlay" id="modal-kpi-chart" onclick="if(event.target===this) closeModal('modal-kpi-chart')">
+  <div class="modal-content" style="max-width: 700px; width: 90%;">
+    <div class="modal-header">
+      <h3 id="kpi-chart-title">Detalles de KPIs</h3>
+      <button class="modal-close" onclick="closeModal('modal-kpi-chart')">&times;</button>
+    </div>
+    <div class="modal-body" id="kpi-chart-content" style="max-height: 70vh; overflow-y: auto;">
+      <canvas id="kpiChartCanvas" style="max-height: 300px; margin-bottom: 20px;"></canvas>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>KPI</th><th>Ponderación</th><th>Cumplimiento</th><th>Estado</th></tr></thead>
+          <tbody id="kpi-chart-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-kpi-chart')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal-overlay" id="modal-user" onclick="if(event.target===this) closeModal('modal-user')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Crear Usuario</h3>
+      <button class="modal-close" onclick="closeModal('modal-user')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nombre Completo *</label>
+          <input class="form-control" id="u-name" type="text" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Usuario (Para iniciar sesión) *</label>
+          <input class="form-control" id="u-username" type="text" placeholder="Ej: jperez">
+        </div>
+      </div>
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input class="form-control" id="u-pass" type="password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico (Opcional)</label>
+          <input class="form-control" id="u-email" type="email" placeholder="juan@empresa.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select class="form-control" id="u-role">
+            <option value="user">Usuario</option>
+            <option value="manager">Gerente</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Departamento</label>
+        <select class="form-control" id="u-dept">
+          <option value="">Seleccione... (Opcional para admin)</option>
+          <option value="Legal">Legal</option>
+          <option value="Administración">Administración</option>
+          <option value="Tesorería">Tesorería</option>
+          <option value="Contabilidad">Contabilidad</option>
+          <option value="Operaciones">Operaciones</option>
+          <option value="RH">Recursos Humanos</option>
+
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-user')">Cancelar</button>
+      <button class="btn-primary" style="width:auto" onclick="submitUser()">Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MI PERFIL -->
+<div class="modal-overlay" id="modal-profile" onclick="if(event.target===this) closeModal('modal-profile')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Mi Perfil</h3>
+      <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input class="form-control" id="p-name" type="text">
+        </div>
+        <div class="form-group">
+          <label>Usuario (Login)</label>
+          <input class="form-control" id="p-username" type="text">
+        </div>
+      </div>
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label>Nueva Contraseña</label>
+          <input class="form-control" id="p-pass" type="password" placeholder="Dejar en blanco para no cambiar">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input class="form-control" id="p-email" type="email">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-profile')">Cancelar</button>
+      <button class="btn-primary" style="width:auto" onclick="submitProfile()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="compliance_app.js?v=22"></script>
+</body>
+</html>

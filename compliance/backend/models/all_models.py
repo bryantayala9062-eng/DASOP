@@ -313,7 +313,23 @@ class KPIEvaluation(Base):
     # Relationships
     evaluator = relationship("User", foreign_keys=[evaluated_by_user_id])
     evidences = relationship("Evidence", back_populates="kpi_eval")
+    details = relationship("KPIEvaluationDetail", back_populates="evaluation", cascade="all, delete-orphan")
 
+class KPIEvaluationDetail(Base):
+    __tablename__ = "kpi_evaluation_details"
+
+    id = Column(Integer, primary_key=True, index=True)
+    evaluation_id = Column(Integer, ForeignKey("kpi_evaluations.id"), index=True)
+    kpi_name = Column(String)
+    frequency = Column(String, nullable=True)
+    target = Column(String, nullable=True)
+    weight = Column(Float, nullable=True)
+    compliance_month = Column(Float, nullable=True)
+    compliance_weighted = Column(Float, nullable=True)
+    status = Column(String, nullable=True)
+
+    # Relationships
+    evaluation = relationship("KPIEvaluation", back_populates="details")
 
 class KPIDefinition(Base):
     __tablename__ = "kpi_definitions"
@@ -348,3 +364,20 @@ class DocumentAuditLog(Base):
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
     evidence = relationship("Evidence", foreign_keys=[evidence_id])
+
+# ─────────────────────────────────────────────────────────
+# CONTROL DE FIRMAS ELECTRÓNICAS (CONTABILIDAD)
+# ─────────────────────────────────────────────────────────
+class ElectronicSignature(Base):
+    __tablename__ = "electronic_signatures"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True) # Nombre de la empresa o firma
+    issue_date = Column(DateTime)     # Fecha inicial de vigencia
+    expiration_date = Column(DateTime) # Fecha de vencimiento (calculada o fija)
+    department = Column(String, default="Contabilidad", index=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    creator = relationship("User", foreign_keys=[created_by_user_id])
